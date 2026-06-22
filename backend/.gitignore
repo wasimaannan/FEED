@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Backend dependencies
+backend/node_modules/
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Android Studio
+frontend/.idea/
+frontend/*.iml
+
+# Android build files
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+
+# Local Android SDK path
+frontend/android/local.properties
+
+# React Native Metro
+frontend/.metro-health-check*
+
+# Temporary files
+tmp/
+temp/

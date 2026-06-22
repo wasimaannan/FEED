@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "FEED Entry System",
+    "slug": "feed-entry-system",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F0F2F5"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1849A9"
+      },
+      "package": "com.feedentry.app",
+      "permissions": ["INTERNET"]
+    },
+    "ios": {
+      "supportsTablet": false
+    }
+  }
+}
