@@ -1,15 +1,20 @@
 // src/screens/VisitScreen.js
 import React, { useState, useRef, useCallback, useMemo } from "react";
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View, Text, ScrollView, KeyboardAvoidingView, Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getFarmsByEnroll, getAllDoctors, saveVisit, calcWeek } from "../api";
 import { S, colors } from "../theme";
 import {
-  SearchPanel, TagLabel, SectionDivider, LockedField, FormField,
-  FirmTypePills, InfoBanner, ValidationBox, TsPill,
+  FadeIn, SearchPanel, TagLabel, SectionDivider,
+  LockedField, FormField, FirmTypePills,
+  InfoBanner, ValidationBox, TsPill,
   PrimaryBtn, GhostBtn, Toast, EmptyState, HeaderBand,
 } from "../components";
 
 export default function VisitScreen() {
+  const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
   const [badge,        setBadge]        = useState("new");
@@ -73,7 +78,7 @@ export default function VisitScreen() {
           toastRef.current?.show("Doctor loaded — pick a date", "ok");
         } else {
           setShowWeek(false);
-          toastRef.current?.show(`Doctor has ${types.length} firm types — pick one`, "warn");
+          toastRef.current?.show(`${types.length} firm types — pick one`, "warn");
         }
         setBadge("new");
         return;
@@ -98,13 +103,13 @@ export default function VisitScreen() {
     setSelFt(ft);
     setDoctor(d => ({ ...d, strFirmType: ft }));
     setShowWeek(true); clearVisitFields();
-    toastRef.current?.show(`Firm type: ${ft} — now pick a date`, "ok");
+    toastRef.current?.show(`Firm type: ${ft} — pick a date`, "ok");
   }, [clearVisitFields]);
 
   const handleSave = useCallback(async () => {
-    if (!doctor)       { toastRef.current?.show("No doctor loaded", "err"); return; }
-    if (!date || !week){ toastRef.current?.show("Date is required", "err"); return; }
-    if (subTotalErr)   { toastRef.current?.show("Fix sub-target error first", "err"); return; }
+    if (!doctor)        { toastRef.current?.show("No doctor loaded", "err"); return; }
+    if (!date || !week) { toastRef.current?.show("Date is required", "err"); return; }
+    if (subTotalErr)    { toastRef.current?.show("Fix sub-target error first", "err"); return; }
     setSaving(true);
     try {
       const result = await saveVisit({
@@ -132,62 +137,132 @@ export default function VisitScreen() {
   }, [doctor, date, week, visitTarget, newVisit, repVisit, problemSolve, newOnboard, selFt, subTotalErr]);
 
   return (
-    <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <HeaderBand
-        color={colors.soil}
-        icon="📋"
-        title="Visit Targets"
-        sub="Weekly entries · auto-timestamped"
-        badge={badge}
-      />
-      <ScrollView contentContainerStyle={S.scroll}>
-        <View style={S.card}>
-          <View style={S.cardBody}>
-            <SearchPanel title="Find Enrol ID" value={searchId} onChangeText={setSearchId} onSearch={lookupVisit} onClear={clearVisit} loading={searching} />
-            {!doctor ? (
-              <EmptyState icon="📋" title="Search for an Enrol ID to begin" sub="Enter an Enrol ID above and tap Search" />
-            ) : (
-              <>
-                <TagLabel text="Doctor Info" />
-                <View style={S.grid2}>
-                  <LockedField label="Enrol ID" value={String(doctor.enroll)} mono style={{ flex: 1 }} />
-                  <LockedField label="Zone"      value={doctor.zone}           style={{ flex: 1 }} />
-                </View>
-                <LockedField label="Doctor Name" value={doctor.name_of_doctor} />
-                <FirmTypePills types={allFirmTypes} selected={selFt} onSelect={selectFirmType} />
-                {showWeek && (
-                  <>
-                    <SectionDivider label="Date & Week" />
-                    <View style={S.grid2}>
-                      <FormField label="Date" value={date} onChangeText={handleDateChange} placeholder="YYYY-MM-DD" keyboardType="numeric" hint="e.g. 2026-05-03" required style={{ flex: 1 }} />
-                      <FormField label="Week #" value={week} editable={false} placeholder="—" hint="Auto from date" style={{ flex: 1 }} />
-                    </View>
-                    <SectionDivider label="Visit Targets" />
-                    <InfoBanner text="Timestamp recorded automatically. New + Rep + Problem must not exceed Visit Target." />
-                    <ValidationBox errors={valErrors} />
-                    <FormField label="Visit Target" value={visitTarget} onChangeText={setVisitTarget} keyboardType="numeric" placeholder="0" />
-                    <View style={S.grid3}>
-                      <View style={S.grid3item}><FormField label="New Visit"     value={newVisit}     onChangeText={setNewVisit}     keyboardType="numeric" placeholder="0" /></View>
-                      <View style={S.grid3item}><FormField label="Rep Visit"     value={repVisit}     onChangeText={setRepVisit}     keyboardType="numeric" placeholder="0" /></View>
-                      <View style={S.grid3item}><FormField label="Problem Solve" value={problemSolve} onChangeText={setProblemSolve} keyboardType="numeric" placeholder="0" /></View>
-                    </View>
-                    <FormField label="New Farm Onboard Target" value={newOnboard} onChangeText={setNewOnboard} keyboardType="numeric" placeholder="0" />
-                    <View style={S.subTotalRow}>
-                      <Text style={S.subTotalText}>Sub-total (New+Rep+Problem): {subTotal}</Text>
-                      {subTotalErr && <Text style={S.subTotalErr}> — exceeds target!</Text>}
-                    </View>
-                    <TsPill timestamp={savedAt} show={showTs} />
-                    <View style={S.btnRow}>
-                      <GhostBtn label="Clear" onPress={clearVisit} />
-                      <PrimaryBtn label="Save Entry" onPress={handleSave} loading={saving} />
-                    </View>
-                  </>
-                )}
-              </>
-            )}
+    <KeyboardAvoidingView
+      style={S.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View style={{ paddingTop: insets.top }}>
+        <HeaderBand
+          color="#7EB8FF"
+          icon="📋"
+          title="Visit Targets"
+          sub="Weekly entries · auto-timestamped"
+          badge={badge}
+        />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[S.scroll, { paddingBottom: 32 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <FadeIn delay={60}>
+          <View style={S.card}>
+            <View style={S.cardBody}>
+              <SearchPanel
+                title="Find Enrol ID"
+                value={searchId}
+                onChangeText={setSearchId}
+                onSearch={lookupVisit}
+                onClear={clearVisit}
+                loading={searching}
+              />
+
+              {!doctor ? (
+                <EmptyState
+                  icon="📋"
+                  title="Search to begin"
+                  sub="Enter an Enrol ID above and tap Go"
+                />
+              ) : (
+                <FadeIn delay={40}>
+                  <TagLabel text="Doctor Info" />
+                  <View style={S.grid2}>
+                    <LockedField label="Enrol ID" value={String(doctor.enroll)} mono style={{ flex: 1 }} />
+                    <LockedField label="Zone"      value={doctor.zone}           style={{ flex: 1 }} />
+                  </View>
+                  <LockedField label="Doctor Name" value={doctor.name_of_doctor} />
+
+                  <FirmTypePills types={allFirmTypes} selected={selFt} onSelect={selectFirmType} />
+
+                  {showWeek && (
+                    <FadeIn delay={80}>
+                      <SectionDivider label="Date & Week" />
+                      <View style={S.grid2}>
+                        <FormField
+                          label="Date"
+                          value={date}
+                          onChangeText={handleDateChange}
+                          placeholder="YYYY-MM-DD"
+                          keyboardType="numeric"
+                          hint="e.g. 2026-05-03"
+                          required
+                          style={{ flex: 1 }}
+                        />
+                        <FormField
+                          label="Week #"
+                          value={week}
+                          editable={false}
+                          placeholder="—"
+                          hint="Auto from date"
+                          style={{ flex: 1 }}
+                        />
+                      </View>
+
+                      <FadeIn delay={120}>
+                        <SectionDivider label="Visit Targets" />
+                        <InfoBanner text="New + Rep + Problem must not exceed Visit Target." />
+                        <ValidationBox errors={valErrors} />
+
+                        <FormField
+                          label="Visit Target"
+                          value={visitTarget}
+                          onChangeText={setVisitTarget}
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+
+                        <View style={S.grid3}>
+                          <View style={S.grid3item}>
+                            <FormField label="New Visit"     value={newVisit}     onChangeText={setNewVisit}     keyboardType="numeric" placeholder="0" />
+                          </View>
+                          <View style={S.grid3item}>
+                            <FormField label="Rep Visit"     value={repVisit}     onChangeText={setRepVisit}     keyboardType="numeric" placeholder="0" />
+                          </View>
+                          <View style={S.grid3item}>
+                            <FormField label="Problem Solve" value={problemSolve} onChangeText={setProblemSolve} keyboardType="numeric" placeholder="0" />
+                          </View>
+                        </View>
+
+                        <FormField
+                          label="New Farm Onboard Target"
+                          value={newOnboard}
+                          onChangeText={setNewOnboard}
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+
+                        <View style={S.subTotalRow}>
+                          <Text style={S.subTotalText}>Sub-total (New+Rep+Problem): {subTotal}</Text>
+                          {subTotalErr && <Text style={S.subTotalErr}> — exceeds target!</Text>}
+                        </View>
+
+                        <TsPill timestamp={savedAt} show={showTs} />
+
+                        <View style={S.btnRow}>
+                          <GhostBtn label="Clear" onPress={clearVisit} />
+                          <PrimaryBtn label="Save Entry" onPress={handleSave} loading={saving} />
+                        </View>
+                      </FadeIn>
+                    </FadeIn>
+                  )}
+                </FadeIn>
+              )}
+            </View>
           </View>
-        </View>
+        </FadeIn>
       </ScrollView>
+
       <Toast ref={toastRef} />
     </KeyboardAvoidingView>
   );

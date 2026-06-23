@@ -1,24 +1,22 @@
 // src/api/index.js
-export const API_URL = "http://10.10.4.82:3000";
+export const API_URL = "http://10.10.4.82:3001";
 
 async function api(method, path, body) {
   const opts = { method, headers: { "Content-Type": "application/json" } };
   if (body) opts.body = JSON.stringify(body);
   const res  = await fetch(`${API_URL}${path}`, opts);
   const data = await res.json();
-  if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
-  return data.data;
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
 }
 
-export const getAllDoctors     = ()        => api("GET",  "/api/doctors");
+export const getAllDoctors     = ()       => api("GET",  "/api/doctors");
 export const getDoctorById     = (enroll) => api("GET",  `/api/doctors/${enroll}`);
 export const saveDoctor        = (payload)=> api("POST", "/api/doctors", payload);
-
-export const getAllFarms       = ()        => api("GET",  "/api/farms");
+export const getAllFarms        = ()       => api("GET",  "/api/farms");
 export const getFarmsByEnroll  = (enroll) => api("GET",  `/api/farms/${enroll}`);
 export const saveFarm          = (payload)=> api("POST", "/api/farms", payload);
-
-export const getAllVisits      = ()        => api("GET",  "/api/visits");
+export const getAllVisits       = ()       => api("GET",  "/api/visits");
 export const getVisitsByEnroll = (enroll) => api("GET",  `/api/visits/${enroll}`);
 export const saveVisit         = (payload)=> api("POST", "/api/visits", payload);
 

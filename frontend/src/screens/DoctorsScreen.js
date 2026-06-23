@@ -1,14 +1,19 @@
 // src/screens/DoctorsScreen.js
 import React, { useState, useRef, useCallback } from "react";
-import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View, ScrollView, KeyboardAvoidingView, Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllDoctors, saveDoctor } from "../api";
 import { S, ZONES, colors } from "../theme";
 import {
-  SearchPanel, TagLabel, FormField, PickerField,
-  ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, HeaderBand,
+  FadeIn, SearchPanel, TagLabel, FormField, PickerField,
+  ModeToggle, WarnBanner, PrimaryBtn, GhostBtn,
+  Toast, HeaderBand,
 } from "../components";
 
 export default function DoctorsScreen() {
+  const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
   const [mode,          setMode]          = useState("new");
@@ -56,60 +61,96 @@ export default function DoctorsScreen() {
 
   const handleSave = useCallback(async () => {
     if (!zone || !enroll || !name.trim()) {
-      toastRef.current?.show("Zone, Enrol ID and Doctor Name are required", "err"); return;
+      toastRef.current?.show("Zone, Enrol ID and Name required", "err"); return;
     }
     setSaving(true);
     try {
       await saveDoctor({ intEnroll: Number(enroll), strDoctorName: name.trim(), strZone: zone });
       setBadge("ok");
-      toastRef.current?.show(mode === "new" ? "New doctor added!" : "Doctor updated!", "ok");
+      toastRef.current?.show(mode === "new" ? "Doctor added!" : "Doctor updated!", "ok");
     } catch (e) {
       toastRef.current?.show(e.message, "err");
     } finally { setSaving(false); }
   }, [zone, enroll, name, mode]);
 
   return (
-    <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <HeaderBand
-        color={colors.forest}
-        icon="🩺"
-        title="Doctors"
-        sub="Field visit records & enrollment"
-        badge={badge}
-      />
-      <ScrollView contentContainerStyle={S.scroll}>
-        <View style={S.card}>
-          <View style={S.cardBody}>
-            <ModeToggle
-              options={[{ label: "+ New Doctor", value: "new" }, { label: "Edit Existing", value: "edit" }]}
-              selected={mode}
-              onSelect={handleModeSwitch}
-            />
-            {mode === "edit" && (
-              <SearchPanel
-                title="Find existing doctor"
-                value={searchId}
-                onChangeText={setSearchId}
-                onSearch={lookupDoctor}
-                onClear={clearForm}
-                loading={searching}
+    <KeyboardAvoidingView
+      style={S.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      {/* Header — safe area top padding baked in */}
+      <View style={{ paddingTop: insets.top }}>
+        <HeaderBand
+          color={colors.lime}
+          icon="🩺"
+          title="Doctors"
+          sub="Enrollment & field records"
+          badge={badge}
+        />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[S.scroll, { paddingBottom: 32 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Mode toggle */}
+        <FadeIn delay={80}>
+          <View style={S.card}>
+            <View style={S.cardBody}>
+              <ModeToggle
+                options={[{ label: "+ New Doctor", value: "new" }, { label: "Edit Existing", value: "edit" }]}
+                selected={mode}
+                onSelect={handleModeSwitch}
               />
-            )}
-            <WarnBanner
-              show={showOverwrite && mode === "new"}
-              text="An existing doctor has this Enrol ID. Saving will update their record."
-            />
-            <TagLabel text="Doctor Details" />
-            <PickerField label="Zone" value={zone} onValueChange={setZone} items={ZONES} required />
-            <FormField label="Enrol ID" value={enroll} onChangeText={checkEnrollExists} keyboardType="numeric" placeholder="e.g. 565609" required />
-            <FormField label="Doctor Name" value={name} onChangeText={setName} placeholder="Dr. Full Name" required />
-            <View style={S.btnRow}>
-              <GhostBtn label="Clear" onPress={clearForm} />
-              <PrimaryBtn label="Save Doctor" onPress={handleSave} loading={saving} />
+
+              {mode === "edit" && (
+                <FadeIn delay={40}>
+                  <SearchPanel
+                    title="Find doctor by Enrol ID"
+                    value={searchId}
+                    onChangeText={setSearchId}
+                    onSearch={lookupDoctor}
+                    onClear={clearForm}
+                    loading={searching}
+                  />
+                </FadeIn>
+              )}
+
+              <WarnBanner
+                show={showOverwrite && mode === "new"}
+                text="This Enrol ID already exists — saving will overwrite the existing record."
+              />
+
+              <FadeIn delay={120}>
+                <TagLabel text="Doctor Details" />
+                <PickerField label="Zone" value={zone} onValueChange={setZone} items={ZONES} required />
+                <FormField
+                  label="Enrol ID"
+                  value={enroll}
+                  onChangeText={checkEnrollExists}
+                  keyboardType="numeric"
+                  placeholder="e.g. 565609"
+                  required
+                />
+                <FormField
+                  label="Doctor Name"
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Dr. Full Name"
+                  required
+                />
+              </FadeIn>
+
+              <View style={S.btnRow}>
+                <GhostBtn label="Clear" onPress={clearForm} />
+                <PrimaryBtn label="Save Doctor" onPress={handleSave} loading={saving} />
+              </View>
             </View>
           </View>
-        </View>
+        </FadeIn>
       </ScrollView>
+
       <Toast ref={toastRef} />
     </KeyboardAvoidingView>
   );

@@ -1,21 +1,26 @@
 // src/screens/FarmsScreen.js
 import React, { useState, useRef, useCallback } from "react";
-import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View, ScrollView, KeyboardAvoidingView, Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getFarmsByEnroll, saveFarm } from "../api";
 import { S, FIRM_TYPES, colors } from "../theme";
 import {
-  SearchPanel, TagLabel, SectionDivider, LockedField, FormField, PickerField,
-  FirmTypePills, InfoBanner, ValidationBox, PrimaryBtn, GhostBtn,
-  Toast, EmptyState, HeaderBand,
+  FadeIn, SearchPanel, TagLabel, SectionDivider,
+  LockedField, FormField, PickerField,
+  FirmTypePills, InfoBanner, ValidationBox,
+  PrimaryBtn, GhostBtn, Toast, EmptyState, HeaderBand,
 } from "../components";
 
 export default function FarmsScreen() {
+  const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
-  const [badge,     setBadge]     = useState("new");
-  const [searching, setSearching] = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [searchId,  setSearchId]  = useState("");
+  const [badge,        setBadge]        = useState("new");
+  const [searching,    setSearching]    = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [searchId,     setSearchId]     = useState("");
 
   const [record,       setRecord]       = useState(null);
   const [allFirmTypes, setAllFirmTypes] = useState([]);
@@ -37,8 +42,8 @@ export default function FarmsScreen() {
 
   const loadFarmRow = useCallback((row) => {
     setFirmType(row.strFirmType || "");
-    setActiveFarm(row.intActiveFarm   != null ? String(row.intActiveFarm)         : "");
-    setUnderService(row.intUnderService != null ? String(row.intUnderService)      : "");
+    setActiveFarm(row.intActiveFarm   != null ? String(row.intActiveFarm)               : "");
+    setUnderService(row.intUnderService != null ? String(row.intUnderService)            : "");
     setUnderTarget(row.intUnderServiceTarget != null ? String(row.intUnderServiceTarget) : "");
     validateNums(row.intActiveFarm, row.intUnderService, row.intUnderServiceTarget);
   }, [validateNums]);
@@ -62,7 +67,7 @@ export default function FarmsScreen() {
         toastRef.current?.show("Record loaded — update and save", "ok");
       } else {
         setFirmType(""); setActiveFarm(""); setUnderService(""); setUnderTarget(""); setErrors([]);
-        toastRef.current?.show(`Doctor has ${types.length} firm types — select one`, "warn");
+        toastRef.current?.show(`${types.length} firm types found — select one`, "warn");
       }
     } catch (e) {
       toastRef.current?.show(e.message, "err");
@@ -83,7 +88,7 @@ export default function FarmsScreen() {
 
   const handleSave = useCallback(async () => {
     if (!record)    { toastRef.current?.show("No record loaded — search first", "err"); return; }
-    if (!firmType)  { toastRef.current?.show("Please select a Firm Type", "err"); return; }
+    if (!firmType)  { toastRef.current?.show("Select a Firm Type first", "err"); return; }
     if (errors.length) { toastRef.current?.show("Fix errors before saving", "err"); return; }
     setSaving(true);
     try {
@@ -104,53 +109,115 @@ export default function FarmsScreen() {
   }, [record, firmType, activeFarm, underService, underTarget, errors]);
 
   return (
-    <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <HeaderBand
-        color={colors.wheat}
-        icon="🌿"
-        title="Farms"
-        sub="Under-service tracking by firm type"
-        badge={badge}
-      />
-      <ScrollView contentContainerStyle={S.scroll}>
-        <View style={S.card}>
-          <View style={S.cardBody}>
-            <SearchPanel title="Find Record" value={searchId} onChangeText={setSearchId} onSearch={lookupFarm} onClear={clearFarm} loading={searching} />
-            {!record ? (
-              <EmptyState icon="🌾" title="Search for a farm record" sub="Enter an Enrol ID above to load the record" />
-            ) : (
-              <>
-                <TagLabel text="Record Info" />
-                <View style={S.grid2}>
-                  <LockedField label="Enrol ID"    value={String(record.enroll)} mono style={{ flex: 1 }} />
-                  <LockedField label="Zone"         value={record.zone}           style={{ flex: 1 }} />
-                </View>
-                <LockedField label="Doctor Name" value={record.name_of_doctor} />
-                <FirmTypePills types={allFirmTypes} selected={selFt} onSelect={selectFirmType} />
-                <SectionDivider label="Editable Fields" />
-                <InfoBanner text="All fields below are editable — update and save." />
-                <ValidationBox errors={errors} />
-                <PickerField label="Firm Type" value={firmType} onValueChange={(val) => { setFirmType(val); setSelFt(val); const row = record.allRows.find(r => r.strFirmType === val); if (row) loadFarmRow(row); }} items={FIRM_TYPES} required />
-                <View style={S.grid3}>
-                  <View style={S.grid3item}>
-                    <FormField label="Active Farms"  value={activeFarm}   onChangeText={(v) => { setActiveFarm(v);   validateNums(v, underService, underTarget); }} keyboardType="numeric" placeholder="0" />
+    <KeyboardAvoidingView
+      style={S.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View style={{ paddingTop: insets.top }}>
+        <HeaderBand
+          color={colors.wheat}
+          icon="🌿"
+          title="Farms"
+          sub="Under-service tracking"
+          badge={badge}
+        />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[S.scroll, { paddingBottom: 32 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <FadeIn delay={60}>
+          <View style={S.card}>
+            <View style={S.cardBody}>
+              <SearchPanel
+                title="Find by Enrol ID"
+                value={searchId}
+                onChangeText={setSearchId}
+                onSearch={lookupFarm}
+                onClear={clearFarm}
+                loading={searching}
+              />
+
+              {!record ? (
+                <EmptyState
+                  icon="🌾"
+                  title="No record loaded"
+                  sub="Enter an Enrol ID above to load the farm record"
+                />
+              ) : (
+                <FadeIn delay={40}>
+                  <TagLabel text="Record Info" />
+                  <View style={S.grid2}>
+                    <LockedField label="Enrol ID" value={String(record.enroll)} mono style={{ flex: 1 }} />
+                    <LockedField label="Zone"      value={record.zone}           style={{ flex: 1 }} />
                   </View>
-                  <View style={S.grid3item}>
-                    <FormField label="Under Service" value={underService} onChangeText={(v) => { setUnderService(v); validateNums(activeFarm, v, underTarget);   }} keyboardType="numeric" placeholder="0" error={Number(underService) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active" : null} />
-                  </View>
-                  <View style={S.grid3item}>
-                    <FormField label="US Target"     value={underTarget}  onChangeText={(v) => { setUnderTarget(v);  validateNums(activeFarm, underService, v);   }} keyboardType="numeric" placeholder="0" error={Number(underTarget) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active" : null} />
-                  </View>
-                </View>
-                <View style={S.btnRow}>
-                  <GhostBtn label="Clear" onPress={clearFarm} />
-                  <PrimaryBtn label="Save Changes" onPress={handleSave} loading={saving} />
-                </View>
-              </>
-            )}
+                  <LockedField label="Doctor Name" value={record.name_of_doctor} />
+
+                  <FirmTypePills types={allFirmTypes} selected={selFt} onSelect={selectFirmType} />
+
+                  <FadeIn delay={80}>
+                    <SectionDivider label="Editable Fields" />
+                    <InfoBanner text="All fields below are editable. Update the values and save." />
+                    <ValidationBox errors={errors} />
+
+                    <PickerField
+                      label="Firm Type"
+                      value={firmType}
+                      onValueChange={(val) => {
+                        setFirmType(val); setSelFt(val);
+                        const row = record.allRows.find(r => r.strFirmType === val);
+                        if (row) loadFarmRow(row);
+                      }}
+                      items={FIRM_TYPES}
+                      required
+                    />
+
+                    <View style={S.grid3}>
+                      <View style={S.grid3item}>
+                        <FormField
+                          label="Active Farms"
+                          value={activeFarm}
+                          onChangeText={(v) => { setActiveFarm(v); validateNums(v, underService, underTarget); }}
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+                      </View>
+                      <View style={S.grid3item}>
+                        <FormField
+                          label="Under Svc"
+                          value={underService}
+                          onChangeText={(v) => { setUnderService(v); validateNums(activeFarm, v, underTarget); }}
+                          keyboardType="numeric"
+                          placeholder="0"
+                          error={Number(underService) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds" : null}
+                        />
+                      </View>
+                      <View style={S.grid3item}>
+                        <FormField
+                          label="US Target"
+                          value={underTarget}
+                          onChangeText={(v) => { setUnderTarget(v); validateNums(activeFarm, underService, v); }}
+                          keyboardType="numeric"
+                          placeholder="0"
+                          error={Number(underTarget) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds" : null}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={S.btnRow}>
+                      <GhostBtn label="Clear" onPress={clearFarm} />
+                      <PrimaryBtn label="Save Changes" onPress={handleSave} loading={saving} />
+                    </View>
+                  </FadeIn>
+                </FadeIn>
+              )}
+            </View>
           </View>
-        </View>
+        </FadeIn>
       </ScrollView>
+
       <Toast ref={toastRef} />
     </KeyboardAvoidingView>
   );

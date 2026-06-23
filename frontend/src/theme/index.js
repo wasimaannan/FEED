@@ -1,200 +1,231 @@
 // src/theme/index.js
-// Design direction: rugged field tool for agriculture, not a generic SaaS app.
-// Palette pulls from farmland — deep green, grain wheat, soil charcoal, cream paper.
+// Akij Feed — premium corporate palette.
+// Deep executive green, warm gold, ivory cream on near-black.
+// Inspired by akijfeed.com: #1B4D3E forest green, gold wheat accent.
 
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 
+const { height: SH } = Dimensions.get("window");
+
+// ── Palette ──────────────────────────────────────────────────────
 export const colors = {
-  // Core palette
-  forest:      "#1B4D3E",   // primary — deep agricultural green
-  forestDeep:  "#123329",   // pressed/active state
-  forestSoft:  "#E8F0EC",   // tinted backgrounds
-  wheat:       "#D4A24C",   // accent — grain/wheat gold
-  wheatSoft:   "#FBF1DD",   // tinted accent backgrounds
-  soil:        "#1C1C1E",   // primary text — near-black charcoal
-  soilLight:   "#4A4A4D",   // secondary text
-  soilFaint:   "#8B8B8E",   // tertiary text / placeholders
-  paper:       "#FAF8F3",   // app background — warm cream paper
-  card:        "#FFFFFF",   // card surfaces
-  cardAlt:     "#F4F1E8",   // alternate card tint
-  line:        "#E5E0D3",   // hairline borders, warm-toned
-  lineStrong:  "#D6CFB8",
+  // Canvas
+  bg:           "#0D1410",   // near-black with deep green tint
+  surface:      "#141C18",   // card base
+  surfaceUp:    "#1A2520",   // elevated surface
+  surfaceHigh:  "#1F2D27",   // top surface
+
+  // Brand — Akij green family
+  brand:        "#1B4D3E",   // Akij primary green
+  brandDeep:    "#123329",   // pressed
+  brandMid:     "#22654F",   // hover/active
+  brandGlow:    "rgba(27,77,62,0.35)",
+
+  // Gold accent — premium
+  gold:         "#C8972A",   // Akij wheat gold
+  goldBright:   "#E4B84A",   // highlight
+  goldSoft:     "#D4A24C",
+  goldGlow:     "rgba(200,151,42,0.18)",
+  goldText:     "#F0C96A",   // gold on dark bg
+
+  // Borders
+  border:       "#243028",
+  borderMid:    "#2E3D35",
+  borderGold:   "rgba(200,151,42,0.3)",
+
+  // Text
+  textPrimary:  "#EFF5F0",   // warm near-white
+  textSec:      "#7A9A87",   // muted green-grey
+  textTertiary: "#4A6355",   // very muted
 
   // Status
-  success:       "#2D6A4F",
-  successBg:      "#E3F0E8",
-  successBorder:  "#A8D5BC",
-  danger:         "#A23B2E",
-  dangerBg:       "#F8E8E5",
-  dangerBorder:   "#E5B3A8",
-  warning:        "#B8762F",
-  warningBg:      "#FAEFDC",
-  warningBorder:  "#E8C98A",
+  success:      "#4CAF7D",
+  successBg:    "rgba(76,175,125,0.12)",
+  successBorder:"rgba(76,175,125,0.25)",
+  danger:       "#E57373",
+  dangerBg:     "rgba(229,115,115,0.10)",
+  dangerBorder: "rgba(229,115,115,0.25)",
+  warning:      "#D4A24C",
+  warningBg:    "rgba(212,162,76,0.12)",
+  warningBorder:"rgba(212,162,76,0.25)",
 };
 
 export const FIRM_TYPES = ["Broiler", "Layer", "Sonali", "Cattle", "Fish"];
 export const ZONES      = ["East", "West", "North", "South", "Central"];
 
-const FONT_DISPLAY = Platform.select({ ios: "Avenir-Heavy",  android: "sans-serif-condensed-medium", default: "sans-serif" });
-const FONT_BODY    = Platform.select({ ios: "Avenir-Medium", android: "sans-serif",                   default: "sans-serif" });
-const FONT_MONO    = Platform.select({ ios: "Menlo",         android: "monospace",                    default: "monospace" });
+// ── Typography ───────────────────────────────────────────────────
+export const FONT_DISPLAY = Platform.select({
+  ios: "Georgia",                          // elegant serif for headers
+  android: "serif",
+  default: "serif",
+});
+export const FONT_BODY = Platform.select({
+  ios: "Avenir-Medium",
+  android: "sans-serif",
+  default: "sans-serif",
+});
+export const FONT_LABEL = Platform.select({
+  ios: "Avenir-Heavy",
+  android: "sans-serif-medium",
+  default: "sans-serif",
+});
+export const FONT_MONO = Platform.select({
+  ios: "Menlo",
+  android: "monospace",
+  default: "monospace",
+});
 
-export const fonts = { display: FONT_DISPLAY, body: FONT_BODY, mono: FONT_MONO };
+export const fonts = {
+  display: FONT_DISPLAY,
+  body: FONT_BODY,
+  label: FONT_LABEL,
+  mono: FONT_MONO,
+};
 
+// ── Safe header height ────────────────────────────────────────────
+export const HEADER_HEIGHT = SH < 700 ? 110 : 130;
+
+// ── Shared styles ─────────────────────────────────────────────────
 export const S = StyleSheet.create({
-  // ── Screen ──────────────────────────────────────────────────
-  screen: { flex: 1, backgroundColor: colors.paper },
-  scroll: { padding: 18, paddingBottom: 90 },
+  // Screen
+  screen: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 36 },
 
-  // ── Tab header band (distinct color wash per tab) ────────────
-  headerBand: {
+  // Header
+  header: {
     paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 22,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: 18,
+    justifyContent: "flex-end",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  headerBandTitle: {
-    fontFamily: fonts.display,
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#fff",
-    letterSpacing: -0.3,
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
   },
-  headerBandSub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.78)",
-    marginTop: 3,
-  },
-  headerBandIcon: {
+  headerIconBox: {
     width: 46,
     height: 46,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 13,
+    backgroundColor: colors.surfaceHigh,
+    borderWidth: 1,
+    borderColor: colors.borderGold,
     alignItems: "center",
     justifyContent: "center",
   },
+  headerEyebrow: {
+    fontFamily: FONT_LABEL,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: colors.goldText,
+    marginBottom: 5,
+  },
+  headerTitle: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: 30,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    letterSpacing: 0.3,
+  },
+  headerSub: {
+    fontFamily: FONT_BODY,
+    fontSize: 13,
+    color: colors.textSec,
+    marginTop: 3,
+  },
 
-  // ── Card ──────────────────────────────────────────────────────
+  // Card
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     borderRadius: 18,
-    marginBottom: 16,
-    shadowColor: colors.soil,
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    overflow: "hidden",
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "visible",
   },
   cardBody: { padding: 18 },
 
-  // ── Tag-style section label (like an equipment tag) ──────────
-  tagLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
-    marginTop: 6,
-  },
-  tagLabelBar: {
-    width: 4,
-    height: 16,
-    borderRadius: 2,
-    backgroundColor: colors.wheat,
-  },
-  tagLabelText: {
-    fontFamily: fonts.mono,
-    fontSize: 11.5,
-    fontWeight: "700",
-    letterSpacing: 1.1,
-    textTransform: "uppercase",
-    color: colors.soilLight,
+  // Gold accent bar (top of card)
+  cardAccentBar: {
+    height: 2,
+    backgroundColor: colors.gold,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
   },
 
-  // ── Search panel ──────────────────────────────────────────────
-  searchPanel: {
-    backgroundColor: colors.forestSoft,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 18,
-  },
-  searchPanelLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: colors.forest,
-    marginBottom: 10,
-  },
-
-  // ── Inputs ──────────────────────────────────────────────────
+  // Inputs
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surfaceUp,
     borderWidth: 1.5,
-    borderColor: colors.line,
-    borderRadius: 14,
+    borderColor: colors.borderMid,
+    borderRadius: 13,
     paddingHorizontal: 15,
-    paddingVertical: 13,
-    fontFamily: fonts.body,
-    fontSize: 15.5,
-    color: colors.soil,
+    paddingVertical: 14,
+    fontFamily: FONT_BODY,
+    fontSize: 15,
+    color: colors.textPrimary,
   },
-  inputFocused:  { borderColor: colors.forest },
-  inputDisabled: { backgroundColor: colors.cardAlt, color: colors.soilLight },
+  inputFocused:  { borderColor: colors.gold },
+  inputDisabled: { opacity: 0.38 },
   inputError:    { borderColor: colors.danger },
 
   label: {
-    fontFamily: fonts.mono,
-    fontSize: 11,
+    fontFamily: FONT_LABEL,
+    fontSize: 10.5,
     fontWeight: "700",
-    letterSpacing: 0.6,
+    letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: colors.soilLight,
+    color: colors.textSec,
     marginBottom: 7,
   },
-  hint:    { fontFamily: fonts.body, fontSize: 12, color: colors.soilFaint, marginTop: 5 },
-  errHint: { fontFamily: fonts.mono, fontSize: 11.5, color: colors.danger, marginTop: 5 },
+  hint:    { fontFamily: FONT_BODY, fontSize: 12, color: colors.textTertiary, marginTop: 4 },
+  errHint: { fontFamily: FONT_MONO, fontSize: 11, color: colors.danger, marginTop: 5 },
 
-  // ── Buttons ──────────────────────────────────────────────────
+  // Buttons
   btnPrimary: {
-    backgroundColor: colors.forest,
+    backgroundColor: colors.brand,
     borderRadius: 14,
     paddingVertical: 15,
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: 8,
-    shadowColor: colors.forest,
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.brandMid,
   },
-  btnPrimaryText: { fontFamily: fonts.display, color: "#fff", fontSize: 15.5, fontWeight: "700" },
+  btnPrimaryText: {
+    fontFamily: FONT_LABEL,
+    color: "#FFFFFF",
+    fontSize: 14.5,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
   btnGhost: {
     backgroundColor: "transparent",
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: colors.lineStrong,
+    borderColor: colors.borderMid,
     paddingVertical: 15,
     paddingHorizontal: 22,
     alignItems: "center",
     justifyContent: "center",
   },
-  btnGhostText:  { fontFamily: fonts.body, color: colors.soilLight, fontSize: 15, fontWeight: "600" },
+  btnGhostText: { fontFamily: FONT_BODY, color: colors.textSec, fontSize: 14, fontWeight: "600" },
   btnSmall: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
     borderRadius: 12,
-    backgroundColor: colors.forest,
+    backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.brandMid,
   },
-  btnSmallText:  { fontFamily: fonts.body, fontSize: 14, fontWeight: "700", color: "#fff" },
+  btnSmallText: { fontFamily: FONT_LABEL, fontSize: 13, fontWeight: "700", color: "#fff", letterSpacing: 0.3 },
   btnRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -202,136 +233,182 @@ export const S = StyleSheet.create({
     marginTop: 22,
     paddingTop: 18,
     borderTopWidth: 1,
-    borderTopColor: colors.line,
+    borderTopColor: colors.border,
   },
 
-  // ── Section divider (field-tool style with bar, not hairline) ──
+  // Tag label
+  tagLabel: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, marginTop: 4 },
+  tagLabelBar: { width: 2.5, height: 14, borderRadius: 2, backgroundColor: colors.gold },
+  tagLabelText: {
+    fontFamily: FONT_LABEL,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: colors.textSec,
+  },
+
+  // Section divider
   sectionDiv: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 20 },
-  sectionDivLine: { flex: 1, height: 1, backgroundColor: colors.line },
+  sectionDivLine: { flex: 1, height: 1, backgroundColor: colors.border },
   sectionDivText: {
-    fontFamily: fonts.mono,
-    fontSize: 10.5,
+    fontFamily: FONT_MONO,
+    fontSize: 9.5,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: colors.textTertiary,
+  },
+
+  // Search panel
+  searchPanel: {
+    backgroundColor: colors.surfaceUp,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+  },
+  searchPanelLabel: {
+    fontFamily: FONT_LABEL,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: colors.goldText,
+    marginBottom: 10,
+  },
+
+  // Locked field
+  lockedField: {
+    backgroundColor: colors.surfaceUp,
+    borderRadius: 12,
+    padding: 13,
+    marginBottom: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.gold,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  lockedLabel: {
+    fontFamily: FONT_LABEL,
+    fontSize: 9.5,
     fontWeight: "700",
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: colors.soilFaint,
+    color: colors.textTertiary,
+    marginBottom: 5,
   },
+  lockedValue: { fontFamily: FONT_BODY, fontSize: 15, fontWeight: "700", color: colors.textPrimary },
 
-  // ── Locked / read-only field — shown as a stamped tag ─────────
-  lockedField: {
-    backgroundColor: colors.cardAlt,
-    borderRadius: 14,
-    padding: 13,
-    marginBottom: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.wheat,
-  },
-  lockedLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 9.5,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: colors.soilFaint,
-    marginBottom: 4,
-  },
-  lockedValue: { fontFamily: fonts.body, fontSize: 15, fontWeight: "700", color: colors.soil },
-
-  // ── Banners ──────────────────────────────────────────────────
+  // Banners
   infoBanner: {
-    backgroundColor: colors.forestSoft,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
+    backgroundColor: colors.goldGlow,
+    borderRadius: 12,
+    padding: 13,
+    marginBottom: 14,
     flexDirection: "row",
     gap: 10,
+    borderWidth: 1,
+    borderColor: colors.borderGold,
   },
-  infoBannerText: { fontFamily: fonts.body, fontSize: 13, color: colors.forest, flex: 1, lineHeight: 19 },
+  infoBannerText: { fontFamily: FONT_BODY, fontSize: 13, color: colors.goldText, flex: 1, lineHeight: 19 },
   warnBanner: {
     backgroundColor: colors.warningBg,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 13,
+    marginBottom: 14,
     flexDirection: "row",
     gap: 10,
+    borderWidth: 1,
+    borderColor: colors.warningBorder,
   },
-  warnBannerText: { fontFamily: fonts.body, fontSize: 13, color: colors.warning, flex: 1, lineHeight: 19 },
+  warnBannerText: { fontFamily: FONT_BODY, fontSize: 13, color: colors.warning, flex: 1, lineHeight: 19 },
 
-  // ── Empty state ──────────────────────────────────────────────
-  emptyState: { alignItems: "center", paddingVertical: 56, paddingHorizontal: 24 },
+  // Empty state
+  emptyState: { alignItems: "center", paddingVertical: 52, paddingHorizontal: 24 },
   emptyIconWrap: {
-    width: 72, height: 72, borderRadius: 24,
-    backgroundColor: colors.forestSoft,
+    width: 70, height: 70, borderRadius: 20,
+    backgroundColor: colors.surfaceUp,
+    borderWidth: 1, borderColor: colors.borderGold,
     alignItems: "center", justifyContent: "center",
     marginBottom: 16,
   },
-  emptyIcon: { fontSize: 32 },
-  emptyText: { fontFamily: fonts.display, fontSize: 16, fontWeight: "700", color: colors.soil, marginBottom: 6 },
-  emptySub:  { fontFamily: fonts.body, fontSize: 13.5, color: colors.soilFaint, textAlign: "center", lineHeight: 19 },
+  emptyIcon: { fontSize: 30 },
+  emptyText: { fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: "700", color: colors.textPrimary, marginBottom: 7 },
+  emptySub:  { fontFamily: FONT_BODY, fontSize: 13.5, color: colors.textTertiary, textAlign: "center", lineHeight: 20 },
 
-  // ── Firm type pills (chunky, field-tag style) ────────────────
-  ftPillRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 18 },
+  // Firm type pills
+  ftPillRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
   ftPill: {
     paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 12, borderWidth: 2, borderColor: colors.line,
-    backgroundColor: colors.card,
+    borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderMid,
+    backgroundColor: colors.surfaceUp,
   },
-  ftPillOn: { borderColor: colors.forest, backgroundColor: colors.forestSoft },
-  ftPillText: { fontFamily: fonts.body, fontSize: 13.5, fontWeight: "700", color: colors.soilLight },
-  ftPillTextOn: { color: colors.forest },
+  ftPillOn: { borderColor: colors.gold, backgroundColor: colors.goldGlow },
+  ftPillText: { fontFamily: FONT_LABEL, fontSize: 12.5, fontWeight: "700", color: colors.textSec },
+  ftPillTextOn: { color: colors.goldText },
 
-  // ── Mode toggle ──────────────────────────────────────────────
+  // Mode toggle
   modeRow: {
     flexDirection: "row",
-    backgroundColor: colors.cardAlt,
-    borderRadius: 14,
-    padding: 5,
+    backgroundColor: colors.surfaceUp,
+    borderRadius: 13,
+    padding: 4,
     marginBottom: 18,
-    gap: 5,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modeBtn: { flex: 1, paddingVertical: 11, borderRadius: 10, alignItems: "center" },
-  modeBtnOn: { backgroundColor: colors.card, shadowColor: colors.soil, shadowOpacity: 0.08, shadowRadius: 4, elevation: 1 },
-  modeBtnText: { fontFamily: fonts.body, fontSize: 13.5, fontWeight: "700", color: colors.soilFaint },
-  modeBtnTextOn: { color: colors.forest },
+  modeBtnOn: {
+    backgroundColor: colors.brand,
+    borderWidth: 1,
+    borderColor: colors.brandMid,
+  },
+  modeBtnText: { fontFamily: FONT_LABEL, fontSize: 12.5, fontWeight: "700", color: colors.textTertiary },
+  modeBtnTextOn: { color: "#fff" },
 
-  // ── Status badge ──────────────────────────────────────────────
-  badge: { paddingHorizontal: 11, paddingVertical: 5, borderRadius: 20, alignSelf: "flex-start" },
-  badgeNew:  { backgroundColor: "rgba(255,255,255,0.20)" },
-  badgeEdit: { backgroundColor: colors.warningBg },
-  badgeOk:   { backgroundColor: colors.successBg },
-  badgeTextNew:  { fontFamily: fonts.mono, fontSize: 10.5, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
-  badgeTextEdit: { fontFamily: fonts.mono, fontSize: 10.5, fontWeight: "700", color: colors.warning, letterSpacing: 0.5 },
-  badgeTextOk:   { fontFamily: fonts.mono, fontSize: 10.5, fontWeight: "700", color: colors.success, letterSpacing: 0.5 },
+  // Badge
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: "flex-start" },
+  badgeNew:  { backgroundColor: "rgba(255,255,255,0.07)", borderWidth: 1, borderColor: colors.border },
+  badgeEdit: { backgroundColor: colors.warningBg, borderWidth: 1, borderColor: colors.warningBorder },
+  badgeOk:   { backgroundColor: colors.successBg, borderWidth: 1, borderColor: colors.successBorder },
+  badgeTextNew:  { fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: "700", color: colors.textSec, letterSpacing: 0.8 },
+  badgeTextEdit: { fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: "700", color: colors.warning, letterSpacing: 0.8 },
+  badgeTextOk:   { fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: "700", color: colors.success, letterSpacing: 0.8 },
 
-  // ── Timestamp pill ──────────────────────────────────────────
+  // Timestamp pill
   tsPill: {
     backgroundColor: colors.successBg,
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    marginTop: 14,
+    marginTop: 12,
     alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: colors.successBorder,
   },
-  tsPillText: { fontFamily: fonts.mono, fontSize: 12, color: colors.success, fontWeight: "600" },
+  tsPillText: { fontFamily: FONT_MONO, fontSize: 12, color: colors.success, fontWeight: "600" },
 
-  // ── Validation box ──────────────────────────────────────────
-  valBox: { backgroundColor: colors.dangerBg, borderRadius: 14, padding: 14, marginBottom: 16 },
-  valBoxTitle: { fontFamily: fonts.body, fontSize: 13.5, fontWeight: "700", color: colors.danger, marginBottom: 5 },
-  valBoxText:  { fontFamily: fonts.body, fontSize: 12.5, color: colors.danger, lineHeight: 18 },
+  // Validation box
+  valBox: { backgroundColor: colors.dangerBg, borderRadius: 12, padding: 13, marginBottom: 14, borderWidth: 1, borderColor: colors.dangerBorder },
+  valBoxTitle: { fontFamily: FONT_LABEL, fontSize: 12.5, fontWeight: "700", color: colors.danger, marginBottom: 5 },
+  valBoxText:  { fontFamily: FONT_BODY, fontSize: 12, color: colors.danger, lineHeight: 18 },
 
-  // ── Sub-total ────────────────────────────────────────────────
+  // Sub-total
   subTotalRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, marginBottom: 6 },
-  subTotalText: { fontFamily: fonts.mono, fontSize: 12.5, color: colors.soilLight },
-  subTotalErr:  { fontFamily: fonts.mono, fontSize: 12.5, color: colors.danger, fontWeight: "700" },
+  subTotalText: { fontFamily: FONT_MONO, fontSize: 12, color: colors.textSec },
+  subTotalErr:  { fontFamily: FONT_MONO, fontSize: 12, color: colors.danger, fontWeight: "700" },
 
-  // ── Grids ────────────────────────────────────────────────────
-  row:       { flexDirection: "row", gap: 12 },
-  grid2:     { flexDirection: "row", gap: 12 },
-  grid3:     { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  // Grids
+  row:       { flexDirection: "row", gap: 10 },
+  grid2:     { flexDirection: "row", gap: 10 },
+  grid3:     { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   grid3item: { flex: 1, minWidth: "30%" },
 
-  overwriteWarn: { backgroundColor: colors.warningBg, borderRadius: 14, padding: 13, marginBottom: 16, flexDirection: "row", gap: 8 },
-  overwriteWarnText: { fontFamily: fonts.body, fontSize: 13, color: colors.warning, flex: 1, lineHeight: 19 },
+  overwriteWarn: { backgroundColor: colors.warningBg, borderRadius: 12, padding: 13, marginBottom: 14, flexDirection: "row", gap: 8, borderWidth: 1, borderColor: colors.warningBorder },
+  overwriteWarnText: { fontFamily: FONT_BODY, fontSize: 13, color: colors.warning, flex: 1, lineHeight: 19 },
 });
