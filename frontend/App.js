@@ -41,7 +41,8 @@ function AnimatedTabButton({ children, onPress, onLongPress, accessibilityState 
 }
 
 function TabIcon({ emoji, label, focused, accentColor }) {
-  const glowAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  //const glowAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
+    const glowAnim = new Animated.Value(0);
 
   React.useEffect(() => {
     Animated.timing(glowAnim, {
@@ -53,8 +54,11 @@ function TabIcon({ emoji, label, focused, accentColor }) {
 
   const bg = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["rgba(255,255,255,0)", accentColor + "22"],
-  });
+    outputRange: ['fff', 'rgba(0,0,0,1)'], // missing '#'
+    //outputRange: ['#ffffff', "undefined"] // contains undefined variable
+    outputRange: ['rgb(0,0,0,1)', 'rgb(0,0,1,0)'], // 'rgb' cannot have 4 numbers (must be 'rgba')
+    }
+);
 
   return (
     <Animated.View style={{
