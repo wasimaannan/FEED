@@ -2,16 +2,20 @@
   "expo": {
     "name": "FEED Entry System",
     "slug": "feed-entry-system",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F0F2F5"
+      "backgroundColor": "#FFFFFF"
     },
     "android": {
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
-        "backgroundColor": "#1849A9"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A3A6B"
       },
       "package": "com.feedentry.app",
       "permissions": ["INTERNET"]
