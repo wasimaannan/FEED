@@ -1,0 +1,20 @@
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Android Studio
+frontend/.idea/
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

@@ -3,7 +3,7 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import DoctorsScreen from "./src/screens/DoctorsScreen";
 import FarmsScreen   from "./src/screens/FarmsScreen";
 import VisitScreen   from "./src/screens/VisitScreen";
@@ -11,28 +11,67 @@ import { colors }    from "./src/theme";
 
 const Tab = createBottomTabNavigator();
 
-function Icon({ emoji, focused }) {
-  return <Text style={{ fontSize: focused ? 22 : 18, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>;
+function TabIcon({ emoji, focused, activeColor }) {
+  return (
+    <View style={{
+      width: 38, height: 38, borderRadius: 12,
+      alignItems: "center", justifyContent: "center",
+      backgroundColor: focused ? activeColor + "22" : "transparent",
+    }}>
+      <Text style={{ fontSize: 19, opacity: focused ? 1 : 0.45 }}>{emoji}</Text>
+    </View>
+  );
 }
 
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Tab.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: colors.surface, elevation: 0, shadowOpacity: 0, borderBottomWidth: 0.5, borderBottomColor: colors.border },
-          headerTitleStyle: { fontSize: 15, fontWeight: "700", color: colors.text },
-          headerTitleAlign: "left",
-          tabBarActiveTintColor:   colors.primary,
-          tabBarInactiveTintColor: colors.text4,
-          tabBarStyle: { borderTopWidth: 0.5, borderTopColor: colors.border, backgroundColor: colors.surface, height: 62, paddingBottom: 8 },
-          tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+          headerShown: false,
+          tabBarShowLabel: true,
+          tabBarActiveTintColor:   colors.forest,
+          tabBarInactiveTintColor: colors.soilFaint,
+          tabBarStyle: {
+            borderTopWidth: 0,
+            backgroundColor: colors.card,
+            height: 78,
+            paddingTop: 10,
+            paddingBottom: 18,
+            shadowColor: colors.soil,
+            shadowOpacity: 0.08,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: -4 },
+            elevation: 12,
+          },
+          tabBarLabelStyle: { fontSize: 11, fontWeight: "700", marginTop: 2 },
         }}
       >
-        <Tab.Screen name="Doctors"      component={DoctorsScreen} options={{ title: "FEED — Doctors",       tabBarLabel: "Doctors", tabBarIcon: ({ focused }) => <Icon emoji="👨‍⚕️" focused={focused} /> }} />
-        <Tab.Screen name="Farms"        component={FarmsScreen}   options={{ title: "FEED — Farms",         tabBarLabel: "Farms",   tabBarIcon: ({ focused }) => <Icon emoji="🌿"   focused={focused} /> }} />
-        <Tab.Screen name="Visit"        component={VisitScreen}   options={{ title: "FEED — Visit Targets", tabBarLabel: "Visit",   tabBarIcon: ({ focused }) => <Icon emoji="📋"   focused={focused} /> }} />
+        <Tab.Screen
+          name="Doctors"
+          component={DoctorsScreen}
+          options={{
+            tabBarLabel: "Doctors",
+            tabBarIcon: ({ focused }) => <TabIcon emoji="🩺" focused={focused} activeColor={colors.forest} />,
+          }}
+        />
+        <Tab.Screen
+          name="Farms"
+          component={FarmsScreen}
+          options={{
+            tabBarLabel: "Farms",
+            tabBarIcon: ({ focused }) => <TabIcon emoji="🌿" focused={focused} activeColor={colors.wheat} />,
+          }}
+        />
+        <Tab.Screen
+          name="Visit"
+          component={VisitScreen}
+          options={{
+            tabBarLabel: "Visits",
+            tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} activeColor={colors.soil} />,
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

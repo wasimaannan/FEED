@@ -1,12 +1,12 @@
 // src/screens/FarmsScreen.js
 import React, { useState, useRef, useCallback } from "react";
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { getFarmsByEnroll, saveFarm } from "../api";
-import { S, FIRM_TYPES } from "../theme";
+import { S, FIRM_TYPES, colors } from "../theme";
 import {
-  SearchPanel, SectionDivider, LockedField, FormField, PickerField,
+  SearchPanel, TagLabel, SectionDivider, LockedField, FormField, PickerField,
   FirmTypePills, InfoBanner, ValidationBox, PrimaryBtn, GhostBtn,
-  Toast, Badge, EmptyState,
+  Toast, EmptyState, HeaderBand,
 } from "../components";
 
 export default function FarmsScreen() {
@@ -105,22 +105,22 @@ export default function FarmsScreen() {
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <HeaderBand
+        color={colors.wheat}
+        icon="🌿"
+        title="Farms"
+        sub="Under-service tracking by firm type"
+        badge={badge}
+      />
       <ScrollView contentContainerStyle={S.scroll}>
         <View style={S.card}>
-          <View style={S.cardHeader}>
-            <View style={{ flex: 1 }}>
-              <Text style={S.cardTitle}>Under-Service Farm Record</Text>
-              <Text style={S.cardDesc}>Search by Enrol ID to load and update</Text>
-            </View>
-            <Badge mode={badge} />
-          </View>
           <View style={S.cardBody}>
             <SearchPanel title="Find Record" value={searchId} onChangeText={setSearchId} onSearch={lookupFarm} onClear={clearFarm} loading={searching} />
             {!record ? (
               <EmptyState icon="🌾" title="Search for a farm record" sub="Enter an Enrol ID above to load the record" />
             ) : (
               <>
-                <SectionDivider label="Record Info" />
+                <TagLabel text="Record Info" />
                 <View style={S.grid2}>
                   <LockedField label="Enrol ID"    value={String(record.enroll)} mono style={{ flex: 1 }} />
                   <LockedField label="Zone"         value={record.zone}           style={{ flex: 1 }} />
@@ -136,15 +136,15 @@ export default function FarmsScreen() {
                     <FormField label="Active Farms"  value={activeFarm}   onChangeText={(v) => { setActiveFarm(v);   validateNums(v, underService, underTarget); }} keyboardType="numeric" placeholder="0" />
                   </View>
                   <View style={S.grid3item}>
-                    <FormField label="Under Service" value={underService} onChangeText={(v) => { setUnderService(v); validateNums(activeFarm, v, underTarget);   }} keyboardType="numeric" placeholder="0" error={Number(underService) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active Farms" : null} />
+                    <FormField label="Under Service" value={underService} onChangeText={(v) => { setUnderService(v); validateNums(activeFarm, v, underTarget);   }} keyboardType="numeric" placeholder="0" error={Number(underService) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active" : null} />
                   </View>
                   <View style={S.grid3item}>
-                    <FormField label="US Target"     value={underTarget}  onChangeText={(v) => { setUnderTarget(v);  validateNums(activeFarm, underService, v);   }} keyboardType="numeric" placeholder="0" error={Number(underTarget) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active Farms" : null} />
+                    <FormField label="US Target"     value={underTarget}  onChangeText={(v) => { setUnderTarget(v);  validateNums(activeFarm, underService, v);   }} keyboardType="numeric" placeholder="0" error={Number(underTarget) > Number(activeFarm) && Number(activeFarm) > 0 ? "Exceeds Active" : null} />
                   </View>
                 </View>
                 <View style={S.btnRow}>
                   <GhostBtn label="Clear" onPress={clearFarm} />
-                  <PrimaryBtn label="💾  Save Changes" onPress={handleSave} loading={saving} />
+                  <PrimaryBtn label="Save Changes" onPress={handleSave} loading={saving} />
                 </View>
               </>
             )}

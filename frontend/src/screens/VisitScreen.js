@@ -2,11 +2,11 @@
 import React, { useState, useRef, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { getFarmsByEnroll, getAllDoctors, saveVisit, calcWeek } from "../api";
-import { S } from "../theme";
+import { S, colors } from "../theme";
 import {
-  SearchPanel, SectionDivider, LockedField, FormField,
+  SearchPanel, TagLabel, SectionDivider, LockedField, FormField,
   FirmTypePills, InfoBanner, ValidationBox, TsPill,
-  PrimaryBtn, GhostBtn, Toast, Badge, EmptyState,
+  PrimaryBtn, GhostBtn, Toast, EmptyState, HeaderBand,
 } from "../components";
 
 export default function VisitScreen() {
@@ -57,7 +57,6 @@ export default function VisitScreen() {
     if (!searchId.trim()) { toastRef.current?.show("Enter an Enrol ID first", "err"); return; }
     setSearching(true);
     try {
-      // Try farms first (has firm type)
       let rows = [];
       try { rows = await getFarmsByEnroll(searchId.trim()); } catch (_) {}
 
@@ -80,7 +79,6 @@ export default function VisitScreen() {
         return;
       }
 
-      // Fallback: DimDoctor
       const docs = await getAllDoctors();
       const dRow = docs.find(d => String(d.intEnroll) === String(searchId.trim()));
       if (dRow) {
@@ -135,22 +133,22 @@ export default function VisitScreen() {
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <HeaderBand
+        color={colors.soil}
+        icon="📋"
+        title="Visit Targets"
+        sub="Weekly entries · auto-timestamped"
+        badge={badge}
+      />
       <ScrollView contentContainerStyle={S.scroll}>
         <View style={S.card}>
-          <View style={S.cardHeader}>
-            <View style={{ flex: 1 }}>
-              <Text style={S.cardTitle}>Visit Target Entry</Text>
-              <Text style={S.cardDesc}>Search by Enrol ID · timestamp auto-recorded</Text>
-            </View>
-            <Badge mode={badge} />
-          </View>
           <View style={S.cardBody}>
             <SearchPanel title="Find Enrol ID" value={searchId} onChangeText={setSearchId} onSearch={lookupVisit} onClear={clearVisit} loading={searching} />
             {!doctor ? (
               <EmptyState icon="📋" title="Search for an Enrol ID to begin" sub="Enter an Enrol ID above and tap Search" />
             ) : (
               <>
-                <SectionDivider label="Doctor Info" />
+                <TagLabel text="Doctor Info" />
                 <View style={S.grid2}>
                   <LockedField label="Enrol ID" value={String(doctor.enroll)} mono style={{ flex: 1 }} />
                   <LockedField label="Zone"      value={doctor.zone}           style={{ flex: 1 }} />
@@ -181,7 +179,7 @@ export default function VisitScreen() {
                     <TsPill timestamp={savedAt} show={showTs} />
                     <View style={S.btnRow}>
                       <GhostBtn label="Clear" onPress={clearVisit} />
-                      <PrimaryBtn label="💾  Save" onPress={handleSave} loading={saving} />
+                      <PrimaryBtn label="Save Entry" onPress={handleSave} loading={saving} />
                     </View>
                   </>
                 )}

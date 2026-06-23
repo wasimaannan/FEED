@@ -1,11 +1,11 @@
 // src/screens/DoctorsScreen.js
 import React, { useState, useRef, useCallback } from "react";
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { getAllDoctors, saveDoctor } from "../api";
-import { S, ZONES } from "../theme";
+import { S, ZONES, colors } from "../theme";
 import {
-  SearchPanel, SectionDivider, FormField, PickerField,
-  ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, Badge,
+  SearchPanel, TagLabel, FormField, PickerField,
+  ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, HeaderBand,
 } from "../components";
 
 export default function DoctorsScreen() {
@@ -70,24 +70,24 @@ export default function DoctorsScreen() {
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <HeaderBand
+        color={colors.forest}
+        icon="🩺"
+        title="Doctors"
+        sub="Field visit records & enrollment"
+        badge={badge}
+      />
       <ScrollView contentContainerStyle={S.scroll}>
         <View style={S.card}>
-          <View style={S.cardHeader}>
-            <View style={{ flex: 1 }}>
-              <Text style={S.cardTitle}>Doctor Record</Text>
-              <Text style={S.cardDesc}>Add new doctors or edit existing ones</Text>
-            </View>
-            <Badge mode={badge} />
-          </View>
           <View style={S.cardBody}>
             <ModeToggle
-              options={[{ label: "+ New Doctor", value: "new" }, { label: "✎ Edit Existing", value: "edit" }]}
+              options={[{ label: "+ New Doctor", value: "new" }, { label: "Edit Existing", value: "edit" }]}
               selected={mode}
               onSelect={handleModeSwitch}
             />
             {mode === "edit" && (
               <SearchPanel
-                title="Find Existing Doctor"
+                title="Find existing doctor"
                 value={searchId}
                 onChangeText={setSearchId}
                 onSearch={lookupDoctor}
@@ -99,13 +99,13 @@ export default function DoctorsScreen() {
               show={showOverwrite && mode === "new"}
               text="An existing doctor has this Enrol ID. Saving will update their record."
             />
-            <SectionDivider label="Doctor Details" />
+            <TagLabel text="Doctor Details" />
             <PickerField label="Zone" value={zone} onValueChange={setZone} items={ZONES} required />
             <FormField label="Enrol ID" value={enroll} onChangeText={checkEnrollExists} keyboardType="numeric" placeholder="e.g. 565609" required />
             <FormField label="Doctor Name" value={name} onChangeText={setName} placeholder="Dr. Full Name" required />
             <View style={S.btnRow}>
               <GhostBtn label="Clear" onPress={clearForm} />
-              <PrimaryBtn label="💾  Save Doctor" onPress={handleSave} loading={saving} />
+              <PrimaryBtn label="Save Doctor" onPress={handleSave} loading={saving} />
             </View>
           </View>
         </View>
