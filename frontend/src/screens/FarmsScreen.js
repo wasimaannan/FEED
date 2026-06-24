@@ -13,7 +13,7 @@ import {
   PrimaryBtn, GhostBtn, Toast, EmptyState, HeaderBand,
 } from "../components";
 
-export default function FarmsScreen() {
+export default function FarmsScreen({ navigation }) {
   const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
@@ -113,14 +113,13 @@ export default function FarmsScreen() {
       style={S.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={{ paddingTop: insets.top }}>
-        <HeaderBand
+      <View>
+        <HeaderBand navigation={navigation}
           color={colors.wheat}
           icon="🌿"
           title="Farms"
           sub="Under-service tracking"
-          badge={badge}
-        />
+          />
       </View>
 
       <ScrollView

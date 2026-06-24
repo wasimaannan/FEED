@@ -12,7 +12,7 @@ import {
   Toast, HeaderBand,
 } from "../components";
 
-export default function DoctorsScreen() {
+export default function DoctorsScreen({ navigation }) {
   const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
@@ -79,14 +79,13 @@ export default function DoctorsScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Header — safe area top padding baked in */}
-      <View style={{ paddingTop: insets.top }}>
-        <HeaderBand
+      <View>
+        <HeaderBand navigation={navigation}
           color={colors.lime}
           icon="🩺"
           title="Doctors"
           sub="Enrollment & field records"
-          badge={badge}
-        />
+          />
       </View>
 
       <ScrollView

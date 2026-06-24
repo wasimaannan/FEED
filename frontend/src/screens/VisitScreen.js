@@ -13,7 +13,7 @@ import {
   PrimaryBtn, GhostBtn, Toast, EmptyState, HeaderBand,
 } from "../components";
 
-export default function VisitScreen() {
+export default function VisitScreen({ navigation }) {
   const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
 
@@ -141,14 +141,13 @@ export default function VisitScreen() {
       style={S.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={{ paddingTop: insets.top }}>
-        <HeaderBand
-          color="#7EB8FF"
+      <View>
+        <HeaderBand navigation={navigation}
+          color="#A0762A"
           icon="📋"
           title="Visit Targets"
           sub="Weekly entries · auto-timestamped"
-          badge={badge}
-        />
+          />
       </View>
 
       <ScrollView
