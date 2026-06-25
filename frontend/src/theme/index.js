@@ -1,200 +1,180 @@
-// src/theme/index.js
 import { StyleSheet, Platform, Dimensions } from "react-native";
-
-const { height: SH } = Dimensions.get("window");
+const { width: SW } = Dimensions.get("window");
 
 export const colors = {
-  // Canvas — deep maroon family
-  bg:           "#120608",   // near-black with maroon tint
-  surface:      "#1C0B0D",   // card base
-  surfaceUp:    "#251114",   // elevated surface
-  surfaceHigh:  "#2E1518",   // top surface
+  // Akij brand
+  brand:        "#0F5432",
+  brandMid:     "#1A6B42",
+  brandLight:   "#2E8B57",
+  brandGlow:    "rgba(15,84,50,0.12)",
+  brandBorder:  "rgba(15,84,50,0.25)",
 
-  // Brand — FEED maroon
-  brand:        "#420F07",   // FEED primary maroon
-  brandDeep:    "#2D0905",   // pressed
-  brandMid:     "#5C1810",   // hover/active
-  brandGlow:    "rgba(66,15,7,0.40)",
+  // Canvas
+  bg:           "#F4F6F4",
+  surface:      "#FFFFFF",
+  surfaceUp:    "#F0F4F1",
+  surfaceHigh:  "#E8EEE9",
 
-  // Gold accent — kept for premium feel
-  gold:         "#B8832A",
-  goldBright:   "#CFA044",
-  goldSoft:     "#C0903C",
-  goldGlow:     "rgba(184,131,42,0.18)",
-  goldText:     "#D4A84A",
+  // Accent — gold/amber
+  gold:         "#C8872A",
+  goldLight:    "#E4A84A",
+  goldBg:       "rgba(200,135,42,0.10)",
+  goldBorder:   "rgba(200,135,42,0.28)",
 
-  // Borders
-  border:       "#2E1518",
-  borderMid:    "#3D1D20",
-  borderGold:   "rgba(184,131,42,0.25)",
+  // Neutral
+  border:       "#E2E8E3",
+  borderMid:    "#CBD5CC",
+  borderStrong: "#A8B5AA",
 
-  // Text — warm cream on maroon
-  textPrimary:  "#F5EDE8",   // warm cream white
-  textSec:      "#A07870",   // muted rose-grey
-  textTertiary: "#6B4A47",   // very muted
+  // Text
+  textPrimary:  "#0D1F13",
+  textSec:      "#4A6550",
+  textTer:      "#7A9480",
 
   // Status
-  success:      "#7DBF9A",
-  successBg:    "rgba(125,191,154,0.12)",
-  successBorder:"rgba(125,191,154,0.25)",
-  danger:       "#E57373",
-  dangerBg:     "rgba(229,115,115,0.10)",
-  dangerBorder: "rgba(229,115,115,0.25)",
-  warning:      "#C0903C",
-  warningBg:    "rgba(184,131,42,0.12)",
-  warningBorder:"rgba(184,131,42,0.22)",
+  success:      "#1A7A3C",
+  successBg:    "rgba(26,122,60,0.09)",
+  successBorder:"rgba(26,122,60,0.22)",
+  danger:       "#C0392B",
+  dangerBg:     "rgba(192,57,43,0.09)",
+  dangerBorder: "rgba(192,57,43,0.22)",
+  warning:      "#C8872A",
+  warningBg:    "rgba(200,135,42,0.09)",
+  warningBorder:"rgba(200,135,42,0.22)",
 
-  // Aliases
-  ink:          "#F5EDE8",
-  inkLight:     "#A07870",
-  inkFaint:     "#6B4A47",
-  paper:        "#120608",
-  card:         "#1C0B0D",
-  cardAlt:      "#251114",
-  line:         "#2E1518",
-  lineStrong:   "#3D1D20",
-  navy:         "#420F07",
-  navySoft:     "rgba(66,15,7,0.20)",
-  orange:       "#B8832A",
-
-  // Module cards
-  moduleDoctor: "#420F07",   // deep maroon
-  moduleVisit:  "#8C6420",   // warm gold
-  moduleFarm:   "#6B2D0F",   // burnt sienna — distinct from maroon, complements gold
-  lime:         "#420F07",
-  wheat:        "#6B2D0F",
+  // Module colors
+  moduleDoc:    "#0F5432",
+  moduleFarm:   "#1A6B42",
+  moduleVisit:  "#C8872A",
+  moduleAct:    "#2E6DA4",
 };
 
-export const FIRM_TYPES = ["Broiler", "Layer", "Sonali", "Cattle", "Fish"];
-export const ZONES      = ["East", "West", "North", "South", "Central"];
+export const FIRM_TYPES    = ["Broiler", "Layer", "Sonali", "Cattle", "Fish"];
+export const ZONES         = ["East", "West", "North", "South", "Central"];
+export const SPECIALIZATIONS = ["Poultry", "Fish", "Cattle"];
+export const MORTALITY     = ["Low", "Medium", "High"];
+export const FEED_QUALITY  = ["Good", "Standard", "Below Standard"];
 
 export const FONT_DISPLAY = Platform.select({ ios: "Georgia", android: "serif", default: "serif" });
 export const FONT_BODY    = Platform.select({ ios: "Avenir-Medium", android: "sans-serif", default: "sans-serif" });
 export const FONT_LABEL   = Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium", default: "sans-serif" });
 export const FONT_MONO    = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
 export const fonts = { display: FONT_DISPLAY, body: FONT_BODY, label: FONT_LABEL, mono: FONT_MONO };
-export const HEADER_HEIGHT = SH < 700 ? 110 : 130;
-export const motion = {
-  springSnappy: { damping: 16, stiffness: 220, mass: 0.7 },
-  springSoft:   { damping: 18, stiffness: 140, mass: 0.9 },
-  springBouncy: { damping: 10, stiffness: 180, mass: 0.8 },
-  durFast: 140, durMed: 240, durSlow: 380,
-};
 
 export const S = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#120608" },
-  scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 36 },
+  screen: { flex: 1, backgroundColor: "#F4F6F4" },
+  scroll: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 },
 
-  homeHeader:   { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 8 },
-  homeGreeting: { fontFamily: "sans-serif", fontSize: 14, color: "#A07870" },
-  homeTitle:    { fontFamily: "serif", fontSize: 28, fontWeight: "800", color: "#F5EDE8", letterSpacing: -0.5, marginTop: 2 },
-  homeGrid:     { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 16 },
-  homeCardShape:   { borderRadius: 24, padding: 22, minHeight: 168, justifyContent: "space-between", overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
-  homeCardIconWrap:{ width: 56, height: 56, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  homeCardIcon:    { fontSize: 28 },
-  homeCardTitle:   { fontFamily: "serif", fontSize: 19, fontWeight: "800", color: "#fff", marginTop: 14 },
-  homeCardSub:     { fontFamily: "sans-serif", fontSize: 12.5, color: "rgba(255,255,255,0.75)", marginTop: 3, lineHeight: 17 },
-  homeCardArrow:   { position: "absolute", right: 18, bottom: 18, width: 34, height: 34, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
+  // Card
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8E3",
+    shadowColor: "#0D1F13",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  cardBody: { padding: 16 },
+  cardAccent: { height: 3, backgroundColor: "#0F5432", borderTopLeftRadius: 16, borderTopRightRadius: 16 },
 
-  headerBand:      { paddingHorizontal: 20, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: "#2E1518" },
-  headerBandTitle: { fontFamily: "serif", fontSize: 26, fontWeight: "800", color: "#fff", letterSpacing: -0.3 },
-  headerBandSub:   { fontFamily: "sans-serif", fontSize: 13, color: "rgba(255,255,255,0.70)", marginTop: 3 },
-  headerBandIcon:  { width: 48, height: 48, borderRadius: 15, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
+  // Inputs
+  input: {
+    backgroundColor: "#F0F4F1",
+    borderWidth: 1.5,
+    borderColor: "#CBD5CC",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }),
+    fontSize: 15,
+    color: "#0D1F13",
+  },
+  label:   { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 10.5, fontWeight: "700", letterSpacing: 1.1, textTransform: "uppercase", color: "#4A6550", marginBottom: 6 },
+  hint:    { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 12, color: "#7A9480", marginTop: 4 },
+  errHint: { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 11, color: "#C0392B", marginTop: 4 },
 
-  header:       { paddingHorizontal: 20, paddingBottom: 18, justifyContent: "flex-end", borderBottomWidth: 1, borderBottomColor: "#2E1518" },
-  headerRow:    { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" },
-  headerIconBox:{ width: 46, height: 46, borderRadius: 13, backgroundColor: "#2E1518", borderWidth: 1, borderColor: "rgba(200,151,42,0.3)", alignItems: "center", justifyContent: "center" },
-  headerEyebrow:{ fontFamily: "sans-serif-medium", fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase", color: "#F0C96A", marginBottom: 5 },
-  headerTitle:  { fontFamily: "serif", fontSize: 30, fontWeight: "700", color: "#F5EDE8", letterSpacing: 0.3 },
-  headerSub:    { fontFamily: "sans-serif", fontSize: 13, color: "#A07870", marginTop: 3 },
+  // Buttons
+  btnPrimary:     { backgroundColor: "#0F5432", borderRadius: 13, paddingVertical: 14, paddingHorizontal: 22, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
+  btnPrimaryText: { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), color: "#FFFFFF", fontSize: 14.5, fontWeight: "700" },
+  btnGhost:       { borderRadius: 13, borderWidth: 1.5, borderColor: "#CBD5CC", paddingVertical: 14, paddingHorizontal: 22, alignItems: "center", justifyContent: "center" },
+  btnGhostText:   { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), color: "#4A6550", fontSize: 14, fontWeight: "600" },
+  btnSmall:       { paddingVertical: 11, paddingHorizontal: 16, borderRadius: 10, backgroundColor: "#0F5432", alignItems: "center", justifyContent: "center" },
+  btnSmallText:   { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 13, fontWeight: "700", color: "#fff" },
+  btnRow:         { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#E2E8E3" },
 
-  card:          { backgroundColor: "#1C0B0D", borderRadius: 18, marginBottom: 14, borderWidth: 1, borderColor: "#2E1518", overflow: "visible" },
-  cardBody:      { padding: 18 },
-  cardAccentBar: { height: 2, backgroundColor: "#C8972A", borderTopLeftRadius: 18, borderTopRightRadius: 18 },
+  // Tag label
+  tagLabel:     { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 2 },
+  tagLabelBar:  { width: 3, height: 14, borderRadius: 2, backgroundColor: "#0F5432" },
+  tagLabelText: { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: "#4A6550" },
 
-  input:         { backgroundColor: "#251114", borderWidth: 1.5, borderColor: "#3D1D20", borderRadius: 13, paddingHorizontal: 15, paddingVertical: 14, fontFamily: "sans-serif", fontSize: 15, color: "#F5EDE8" },
-  inputFocused:  { borderColor: "#C8972A" },
-  inputDisabled: { opacity: 0.38 },
-  inputError:    { borderColor: "#E57373" },
+  // Section divider
+  sectionDiv:     { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 18 },
+  sectionDivLine: { flex: 1, height: 1, backgroundColor: "#E2E8E3" },
+  sectionDivText: { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 9.5, fontWeight: "700", letterSpacing: 1.1, textTransform: "uppercase", color: "#7A9480" },
 
-  label:   { fontFamily: "sans-serif-medium", fontSize: 10.5, fontWeight: "700", letterSpacing: 1.2, textTransform: "uppercase", color: "#A07870", marginBottom: 7 },
-  hint:    { fontFamily: "sans-serif", fontSize: 12, color: "#6B4A47", marginTop: 4 },
-  errHint: { fontFamily: "monospace", fontSize: 11, color: "#E57373", marginTop: 5 },
+  // Locked field
+  lockedField: { backgroundColor: "#F0F4F1", borderRadius: 11, padding: 12, marginBottom: 10, borderLeftWidth: 3, borderLeftColor: "#0F5432", borderWidth: 1, borderColor: "#E2E8E3" },
+  lockedLabel: { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 9.5, fontWeight: "700", letterSpacing: 0.9, textTransform: "uppercase", color: "#7A9480", marginBottom: 4 },
+  lockedValue: { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 15, fontWeight: "700", color: "#0D1F13" },
 
-  btnPrimary:      { backgroundColor: "#420F07", borderRadius: 14, paddingVertical: 15, paddingHorizontal: 24, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8, borderWidth: 1, borderColor: "#5C1810" },
-  btnPrimaryShape: { backgroundColor: "#420F07", borderRadius: 14, paddingVertical: 15, paddingHorizontal: 24, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8, borderWidth: 1, borderColor: "#5C1810" },
-  btnPrimaryText:  { fontFamily: "sans-serif-medium", color: "#FFFFFF", fontSize: 14.5, fontWeight: "700", letterSpacing: 0.3 },
-  btnGhost:        { backgroundColor: "transparent", borderRadius: 14, borderWidth: 1.5, borderColor: "#3D1D20", paddingVertical: 15, paddingHorizontal: 22, alignItems: "center", justifyContent: "center" },
-  btnGhostText:    { fontFamily: "sans-serif", color: "#A07870", fontSize: 14, fontWeight: "600" },
-  btnSmall:        { paddingVertical: 13, paddingHorizontal: 18, borderRadius: 12, backgroundColor: "#420F07", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#5C1810" },
-  btnSmallShape:   { paddingVertical: 13, paddingHorizontal: 18, borderRadius: 12, backgroundColor: "#420F07", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#5C1810" },
-  btnSmallText:    { fontFamily: "sans-serif-medium", fontSize: 13, fontWeight: "700", color: "#fff", letterSpacing: 0.3 },
-  btnRow:          { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: "#2E1518" },
+  // Search panel
+  searchPanel:      { backgroundColor: "#FFFFFF", borderRadius: 13, padding: 13, marginBottom: 14, borderWidth: 1.5, borderColor: "#CBD5CC" },
+  searchPanelLabel: { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: "#0F5432", marginBottom: 9 },
 
-  tagLabel:     { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, marginTop: 4 },
-  tagLabelBar:  { width: 2.5, height: 14, borderRadius: 2, backgroundColor: "#C8972A" },
-  tagLabelText: { fontFamily: "sans-serif-medium", fontSize: 10, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", color: "#A07870" },
+  // Pill row
+  ftPillRow:    { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
+  ftPill:       { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: "#CBD5CC", backgroundColor: "#F0F4F1" },
+  ftPillOn:     { borderColor: "#0F5432", backgroundColor: "rgba(15,84,50,0.09)" },
+  ftPillText:   { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 12.5, fontWeight: "700", color: "#4A6550" },
+  ftPillTextOn: { color: "#0F5432" },
 
-  sectionDiv:     { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 20 },
-  sectionDivLine: { flex: 1, height: 1, backgroundColor: "#2E1518" },
-  sectionDivText: { fontFamily: "monospace", fontSize: 9.5, fontWeight: "700", letterSpacing: 1.2, textTransform: "uppercase", color: "#6B4A47" },
+  // Mode toggle
+  modeRow:       { flexDirection: "row", backgroundColor: "#E8EEE9", borderRadius: 12, padding: 4, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8E3" },
+  modeBtn:       { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: "center" },
+  modeBtnOn:     { backgroundColor: "#FFFFFF", shadowColor: "#0D1F13", shadowOpacity: 0.07, shadowRadius: 4, elevation: 1 },
+  modeBtnText:   { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 12.5, fontWeight: "700", color: "#7A9480" },
+  modeBtnTextOn: { color: "#0D1F13" },
 
-  searchPanel:      { backgroundColor: "#251114", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#3D1D20" },
-  searchPanelLabel: { fontFamily: "sans-serif-medium", fontSize: 10, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", color: "#F0C96A", marginBottom: 10 },
+  // Badge
+  badge:         { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, alignSelf: "flex-start" },
+  badgeNew:      { backgroundColor: "#F0F4F1", borderWidth: 1, borderColor: "#CBD5CC" },
+  badgeEdit:     { backgroundColor: "rgba(200,135,42,0.09)", borderWidth: 1, borderColor: "rgba(200,135,42,0.28)" },
+  badgeOk:       { backgroundColor: "rgba(26,122,60,0.09)", borderWidth: 1, borderColor: "rgba(26,122,60,0.28)" },
+  badgeTextNew:  { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 9.5, fontWeight: "700", color: "#4A6550", letterSpacing: 0.7 },
+  badgeTextEdit: { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 9.5, fontWeight: "700", color: "#C8872A", letterSpacing: 0.7 },
+  badgeTextOk:   { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 9.5, fontWeight: "700", color: "#1A7A3C", letterSpacing: 0.7 },
 
-  lockedField: { backgroundColor: "#251114", borderRadius: 12, padding: 13, marginBottom: 10, borderLeftWidth: 2, borderLeftColor: "#C8972A", borderWidth: 1, borderColor: "#2E1518" },
-  lockedLabel: { fontFamily: "sans-serif-medium", fontSize: 9.5, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", color: "#6B4A47", marginBottom: 5 },
-  lockedValue: { fontFamily: "sans-serif", fontSize: 15, fontWeight: "700", color: "#F5EDE8" },
+  // Timestamp pill
+  tsPill:     { backgroundColor: "rgba(26,122,60,0.09)", borderRadius: 10, padding: 10, flexDirection: "row", alignItems: "center", gap: 7, marginTop: 12, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(26,122,60,0.22)" },
+  tsPillText: { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 12, color: "#1A7A3C", fontWeight: "600" },
 
-  infoBanner:     { backgroundColor: "rgba(200,151,42,0.18)", borderRadius: 12, padding: 13, marginBottom: 14, flexDirection: "row", gap: 10, borderWidth: 1, borderColor: "rgba(200,151,42,0.3)" },
-  infoBannerText: { fontFamily: "sans-serif", fontSize: 13, color: "#F0C96A", flex: 1, lineHeight: 19 },
-  warnBanner:     { backgroundColor: "rgba(212,162,76,0.12)", borderRadius: 12, padding: 13, marginBottom: 14, flexDirection: "row", gap: 10, borderWidth: 1, borderColor: "rgba(212,162,76,0.25)" },
-  warnBannerText: { fontFamily: "sans-serif", fontSize: 13, color: "#D4A24C", flex: 1, lineHeight: 19 },
+  // Validation
+  valBox:      { backgroundColor: "rgba(192,57,43,0.08)", borderRadius: 11, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "rgba(192,57,43,0.22)" },
+  valBoxTitle: { fontFamily: Platform.select({ ios: "Avenir-Heavy", android: "sans-serif-medium" }), fontSize: 12.5, fontWeight: "700", color: "#C0392B", marginBottom: 4 },
+  valBoxText:  { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 12, color: "#C0392B", lineHeight: 18 },
 
-  emptyState:    { alignItems: "center", paddingVertical: 52, paddingHorizontal: 24 },
-  emptyIconWrap: { width: 70, height: 70, borderRadius: 20, backgroundColor: "#251114", borderWidth: 1, borderColor: "rgba(200,151,42,0.3)", alignItems: "center", justifyContent: "center", marginBottom: 16 },
-  emptyIcon:     { fontSize: 30 },
-  emptyText:     { fontFamily: "serif", fontSize: 17, fontWeight: "700", color: "#F5EDE8", marginBottom: 7 },
-  emptySub:      { fontFamily: "sans-serif", fontSize: 13.5, color: "#6B4A47", textAlign: "center", lineHeight: 20 },
+  // Info / warn banners
+  infoBanner:     { backgroundColor: "rgba(15,84,50,0.07)", borderRadius: 11, padding: 12, marginBottom: 12, flexDirection: "row", gap: 9, borderWidth: 1, borderColor: "rgba(15,84,50,0.20)" },
+  infoBannerText: { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 13, color: "#0F5432", flex: 1, lineHeight: 19 },
+  warnBanner:     { backgroundColor: "rgba(200,135,42,0.08)", borderRadius: 11, padding: 12, marginBottom: 12, flexDirection: "row", gap: 9, borderWidth: 1, borderColor: "rgba(200,135,42,0.25)" },
+  warnBannerText: { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 13, color: "#C8872A", flex: 1, lineHeight: 19 },
 
-  ftPillRow:    { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  ftPill:       { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: "#3D1D20", backgroundColor: "#251114" },
-  ftPillShape:  { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: "#3D1D20", backgroundColor: "#251114" },
-  ftPillOn:     { borderColor: "#C8972A", backgroundColor: "rgba(200,151,42,0.18)" },
-  ftPillText:   { fontFamily: "sans-serif-medium", fontSize: 12.5, fontWeight: "700", color: "#A07870" },
-  ftPillTextOn: { color: "#F0C96A" },
-
-  modeRow:       { flexDirection: "row", backgroundColor: "#251114", borderRadius: 13, padding: 4, marginBottom: 18, gap: 4, borderWidth: 1, borderColor: "#2E1518" },
-  modeBtn:       { flex: 1, paddingVertical: 11, borderRadius: 10, alignItems: "center" },
-  modeBtnShape:  { flex: 1, paddingVertical: 11, borderRadius: 10, alignItems: "center" },
-  modeBtnOn:     { backgroundColor: "#420F07", borderWidth: 1, borderColor: "#5C1810" },
-  modeBtnText:   { fontFamily: "sans-serif-medium", fontSize: 12.5, fontWeight: "700", color: "#6B4A47" },
-  modeBtnTextOn: { color: "#fff" },
-
-  badge:         { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: "flex-start" },
-  badgeNew:      { backgroundColor: "rgba(255,255,255,0.07)", borderWidth: 1, borderColor: "#2E1518" },
-  badgeEdit:     { backgroundColor: "rgba(212,162,76,0.12)", borderWidth: 1, borderColor: "rgba(212,162,76,0.25)" },
-  badgeOk:       { backgroundColor: "rgba(125,191,154,0.12)", borderWidth: 1, borderColor: "rgba(125,191,154,0.25)" },
-  badgeTextNew:  { fontFamily: "monospace", fontSize: 9.5, fontWeight: "700", color: "#A07870", letterSpacing: 0.8 },
-  badgeTextEdit: { fontFamily: "monospace", fontSize: 9.5, fontWeight: "700", color: "#D4A24C", letterSpacing: 0.8 },
-  badgeTextOk:   { fontFamily: "monospace", fontSize: 9.5, fontWeight: "700", color: "#7DBF9A", letterSpacing: 0.8 },
-
-  tsPill:     { backgroundColor: "rgba(125,191,154,0.12)", borderRadius: 10, padding: 10, flexDirection: "row", alignItems: "center", gap: 7, marginTop: 12, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(125,191,154,0.25)" },
-  tsPillText: { fontFamily: "monospace", fontSize: 12, color: "#7DBF9A", fontWeight: "600" },
-
-  valBox:      { backgroundColor: "rgba(229,115,115,0.10)", borderRadius: 12, padding: 13, marginBottom: 14, borderWidth: 1, borderColor: "rgba(229,115,115,0.25)" },
-  valBoxTitle: { fontFamily: "sans-serif-medium", fontSize: 12.5, fontWeight: "700", color: "#E57373", marginBottom: 5 },
-  valBoxText:  { fontFamily: "sans-serif", fontSize: 12, color: "#E57373", lineHeight: 18 },
-
-  subTotalRow:  { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, marginBottom: 6 },
-  subTotalText: { fontFamily: "monospace", fontSize: 12, color: "#A07870" },
-  subTotalErr:  { fontFamily: "monospace", fontSize: 12, color: "#E57373", fontWeight: "700" },
+  // Empty state
+  emptyState:    { alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 },
+  emptyIconWrap: { width: 68, height: 68, borderRadius: 20, backgroundColor: "#F0F4F1", borderWidth: 1.5, borderColor: "#CBD5CC", alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  emptyIcon:     { fontSize: 28 },
+  emptyText:     { fontFamily: Platform.select({ ios: "Georgia", android: "serif" }), fontSize: 17, fontWeight: "700", color: "#0D1F13", marginBottom: 6 },
+  emptySub:      { fontFamily: Platform.select({ ios: "Avenir-Medium", android: "sans-serif" }), fontSize: 13.5, color: "#7A9480", textAlign: "center", lineHeight: 20 },
 
   row:       { flexDirection: "row", gap: 10 },
   grid2:     { flexDirection: "row", gap: 10 },
   grid3:     { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   grid3item: { flex: 1, minWidth: "30%" },
-
-  overwriteWarn:     { backgroundColor: "rgba(212,162,76,0.12)", borderRadius: 12, padding: 13, marginBottom: 14, flexDirection: "row", gap: 8, borderWidth: 1, borderColor: "rgba(212,162,76,0.25)" },
-  overwriteWarnText: { fontFamily: "sans-serif", fontSize: 13, color: "#D4A24C", flex: 1, lineHeight: 19 },
+  subTotalRow:  { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6, marginBottom: 6 },
+  subTotalText: { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 12, color: "#4A6550" },
+  subTotalErr:  { fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }), fontSize: 12, color: "#C0392B", fontWeight: "700" },
 });
