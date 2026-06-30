@@ -1,4 +1,5 @@
 // src/screens/HomeScreen.js
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { View, Text, ScrollView, Pressable, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -67,7 +68,7 @@ export default function HomeScreen({ navigation }) {
 
       <View style={S.homeGrid}>
         <ModuleCard
-          icon="🩺"
+          icon={<Ionicons name="medkit-outline" size={28} color="#fff" />}
           title="Doctors"
           sub="Enroll and edit field doctor records"
           color={colors.moduleDoctor}
@@ -75,7 +76,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Doctors")}
         />
         <ModuleCard
-          icon="🌿"
+          icon={<Ionicons name="leaf-outline" size={28} color="#fff" />}
           title="Farms"
           sub="Track under-service farms by firm type"
           color={colors.moduleFarm}
@@ -83,7 +84,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Farms")}
         />
         <ModuleCard
-          icon="📋"
+          icon={<Ionicons name="clipboard-outline" size={28} color="#fff" />}
           title="Visit targets"
           sub="Log weekly visit entries"
           color={colors.moduleVisit}

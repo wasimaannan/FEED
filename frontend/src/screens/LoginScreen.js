@@ -9,20 +9,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { forgotUserPassword } from "../api";
 import { PickerField } from "../components";
+import { LinearGradient } from "expo-linear-gradient";
 
 // ── Brand colors matching your existing theme ──────────────────
 const C = {
-  bg:       "#F4F6F4",
+  bg:       "#FAF7F8",
   surface:  "#FFFFFF",
-  border:   "#D8E4DA",
-  brand:    "#0F5432",
-  brandMid: "#1A6B42",
-  gold:     "#C8872A",
-  goldLight:"#E4A84A",
-  text:     "#1A2E1F",
-  textSec:  "#4A6B52",
-  textTer:  "#8AA894",
-  danger:   "#C0392B",
+  border:   "#F0E5EA",
+  brand:    "#C2386E",
+  brandMid: "#A8306B",
+  gold:     "#8B3FA8",
+  goldLight:"#A85FC4",
+  text:     "#1F1320",
+  textSec:  "#7A5C6E",
+  textTer:  "#B89AAA",
+  danger:   "#D6336C",
 };
 
 // ── Dev bypass — set to true to skip login ─────────────────────
@@ -139,9 +140,9 @@ export default function LoginScreen({ navigation }) {
       >
         {/* Logo */}
         <Animated.View style={[styles.logoWrap, { opacity:fadeIn, transform:[{translateY:slideUp}] }]}>
-          <View style={styles.logoBox}>
+          <LinearGradient colors={["#FF6B6B","#C2386E","#5B2A86"]} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.logoBox}>
             <Text style={styles.logoF}>F</Text>
-          </View>
+          </LinearGradient>
           <Text style={styles.appName}>FEED</Text>
           <Text style={styles.appSub}>Field Entry & Enrollment Data</Text>
           <Text style={styles.appOrg}>Akij Group · Field Operations</Text>
@@ -192,11 +193,13 @@ export default function LoginScreen({ navigation }) {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <TouchableOpacity style={[styles.btn, loading && {opacity:0.7}]} onPress={handleSubmit} disabled={loading}>
-            {loading
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.btnTxt}>{mode==="login" ? "Sign in" : "Create account"}</Text>
-            }
+          <TouchableOpacity onPress={handleSubmit} disabled={loading} activeOpacity={0.85} style={loading && {opacity:0.7}}>
+            <LinearGradient colors={["#FF6B6B","#C2386E","#5B2A86"]} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.btn}>
+              {loading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.btnTxt}>{mode==="login" ? "Sign in" : "Create account"}</Text>
+              }
+            </LinearGradient>
           </TouchableOpacity>
 
           {mode === "login" && (
@@ -243,7 +246,7 @@ function Field({ label, value, onChange, placeholder, keyboardType, secure }) {
 const styles = StyleSheet.create({
   scroll:       { flexGrow:1, paddingHorizontal:24 },
   logoWrap:     { alignItems:"center", marginBottom:32 },
-  logoBox:      { width:76, height:76, borderRadius:24, backgroundColor:C.brand, alignItems:"center", justifyContent:"center", marginBottom:16, shadowColor:C.brand, shadowOpacity:0.4, shadowRadius:18, shadowOffset:{width:0,height:8}, elevation:10 },
+  logoBox:      { width:76, height:76, borderRadius:24, alignItems:"center", justifyContent:"center", marginBottom:16, shadowColor:"#C2386E", shadowOpacity:0.4, shadowRadius:18, shadowOffset:{width:0,height:8}, elevation:10, overflow:"hidden" },
   logoF:        { fontSize:38, fontWeight:"800", color:"#fff", fontFamily:"serif" },
   appName:      { fontSize:30, fontWeight:"800", color:C.text, fontFamily:"serif", letterSpacing:4 },
   appSub:       { fontSize:12, color:C.textSec, marginTop:5, letterSpacing:0.3 },
@@ -251,14 +254,14 @@ const styles = StyleSheet.create({
   card:         { backgroundColor:C.surface, borderRadius:24, padding:24, borderWidth:1, borderColor:C.border, shadowColor:"#000", shadowOpacity:0.06, shadowRadius:20, shadowOffset:{width:0,height:6}, elevation:4 },
   toggle:       { flexDirection:"row", backgroundColor:C.bg, borderRadius:14, padding:4, marginBottom:22, borderWidth:1, borderColor:C.border },
   toggleBtn:    { flex:1, paddingVertical:10, borderRadius:11, alignItems:"center" },
-  toggleBtnOn:  { backgroundColor:C.brand, shadowColor:C.brand, shadowOpacity:0.3, shadowRadius:8, elevation:4 },
+  toggleBtnOn:  { shadowColor:"#C2386E", shadowOpacity:0.3, shadowRadius:8, elevation:4 },
   toggleTxt:    { fontSize:13, fontWeight:"600", color:C.textTer },
   toggleTxtOn:  { color:"#fff", fontWeight:"700" },
   label:        { fontSize:11, fontWeight:"700", color:C.textSec, letterSpacing:1, textTransform:"uppercase", marginBottom:7 },
   input:        { backgroundColor:C.bg, borderWidth:1.5, borderColor:C.border, borderRadius:13, paddingHorizontal:14, paddingVertical:13, fontSize:15, color:C.text },
   inputFocused: { borderColor:C.brand, backgroundColor:C.surface },
   error:        { fontSize:12, color:C.danger, marginBottom:12, textAlign:"center" },
-  btn:          { backgroundColor:C.brand, borderRadius:14, paddingVertical:15, alignItems:"center", marginTop:6, shadowColor:C.brand, shadowOpacity:0.35, shadowRadius:12, shadowOffset:{width:0,height:6}, elevation:6 },
+  btn:          { borderRadius:14, paddingVertical:15, alignItems:"center", marginTop:6, shadowColor:"#C2386E", shadowOpacity:0.35, shadowRadius:12, shadowOffset:{width:0,height:6}, elevation:6 },
   btnTxt:       { color:"#fff", fontSize:15, fontWeight:"700", letterSpacing:0.3 },
   forgotWrap:   { marginTop:14, alignItems:"center" },
   forgotTxt:    { fontSize:13, color:C.brandMid, fontWeight:"600" },

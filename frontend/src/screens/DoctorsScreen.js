@@ -6,6 +6,7 @@ import { ZONES, SPECIALIZATIONS, colors } from "../theme";
 import { FadeIn, ScreenHeader, SearchPanel, TagLabel, FormField, PickerField, PillGroup, ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, SectionDivider } from "../components";
 import { S } from "../theme";
 import { useAuth } from "../context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function DoctorsScreen() {
   const insets   = useSafeAreaInsets();
@@ -99,8 +100,8 @@ export default function DoctorsScreen() {
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS==="ios"?"padding":undefined}>
-      <View style={{paddingTop:insets.top}}>
-        <ScreenHeader title="Doctors" sub="Master data · enrollment" icon="🩺" badge={badge}/>
+      <View>
+        <ScreenHeader title="Doctors" sub="Master data · enrollment" icon={<Ionicons name="medkit-outline" size={22} color="#fff" />} badge={badge}/>
       </View>
       <ScrollView contentContainerStyle={S.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <FadeIn delay={60}>

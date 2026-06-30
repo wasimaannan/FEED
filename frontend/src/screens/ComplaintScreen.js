@@ -13,6 +13,7 @@ import {
   GhostBtn, Toast, SectionDivider, EmptyState,
 } from "../components";
 import { useAuth } from "../context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 
 // ── 5-Level Complaint Hierarchy (inline) ────────────────────────
 const COMPLAINT_HIERARCHY = {
@@ -167,13 +168,14 @@ export default function ComplaintScreen() {
     }
   }, [refreshOpenList]);
 
+  const insets2 = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View>
         <ScreenHeader
           title="Complaint Register"
           sub={user ? `${user.fullName} · Enrol #${user.enrollId}` : "Farm complaints · root cause tracking"}
-          icon="📢"
+          icon={<Ionicons name="flag-outline" size={22} color="#fff" />}
           badge={openList.length > 0 ? "edit" : "new"}
         />
       </View>

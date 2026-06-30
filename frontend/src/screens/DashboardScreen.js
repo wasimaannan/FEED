@@ -110,7 +110,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={d.title}>Dashboard</Text>
             <Text style={d.sub}>Week {weekNum} · {dateStr}</Text>
           </View>
-          <View style={d.avatar}><Text style={d.avatarTxt}>{initials}</Text></View>
+          <TouchableOpacity style={d.avatar} onPress={()=>navigation.navigate("Profile")} activeOpacity={0.8}><Text style={d.avatarTxt}>{initials}</Text></TouchableOpacity>
         </View>
         <View style={d.searchBar}>
           <Text style={{fontSize:15,color:"rgba(255,255,255,0.65)",marginRight:8}}>⌕</Text>

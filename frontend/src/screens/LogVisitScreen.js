@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllDoctors, getFarmsByEnroll, saveVisit, calcWeek } from "../api";
 import { FIRM_TYPES, MORTALITY, FEED_QUALITY, colors, fonts } from "../theme";
 import { S } from "../theme";
+import { Ionicons } from "@expo/vector-icons";
 import { FadeIn, ScreenHeader, SearchPanel, TagLabel, SectionDivider, LockedField, FormField, PickerField, PillGroup, ValidationBox, TsPill, PrimaryBtn, GhostBtn, Toast, EmptyState, InfoBanner } from "../components";
 
 export default function LogVisitScreen({ navigation, route }) {
@@ -130,8 +131,8 @@ export default function LogVisitScreen({ navigation, route }) {
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS==="ios"?"padding":undefined}>
-      <View style={{paddingTop:insets.top}}>
-        <ScreenHeader title="Log Visit" sub="Record today's field visit" icon="📋" badge={badge}/>
+      <View>
+        <ScreenHeader title="Log Visit" sub="Record today's field visit" icon={<Ionicons name="clipboard-outline" size={22} color="#fff" />} badge={badge}/>
       </View>
       <ScrollView contentContainerStyle={S.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <FadeIn delay={60}>
@@ -141,7 +142,7 @@ export default function LogVisitScreen({ navigation, route }) {
               <SearchPanel title="Find Doctor by Enrol ID" value={searchId} onChangeText={setSearchId} onSearch={lookup} onClear={clearAll} loading={searching}/>
 
               {!doctor
-                ? <EmptyState icon="🩺" title="Search for a doctor" sub="Enter the Enrol ID above to start logging a visit"/>
+                ? <EmptyState icon={<Ionicons name="medkit-outline" size={28} color="#B89AAA" />} title="Search for a doctor" sub="Enter the Enrol ID above to start logging a visit"/>
                 : <>
                     <FadeIn delay={40}>
                       <TagLabel text="Doctor Info"/>

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Animated, StyleSheet, Modal, FlatList, Easing, Pressable } from "react-native";
 import { colors, fonts, S } from "../theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 // ── Motion ───────────────────────────────────────────────────────
 export function FadeIn({ children, delay = 0, style }) {
@@ -35,11 +37,13 @@ function usePress(to=0.96) {
 }
 
 // ── Header ───────────────────────────────────────────────────────
+const SUNSET_HEADER = ["#FF6B6B", "#C2386E", "#5B2A86"];
+
 export function ScreenHeader({ title, sub, icon, badge }) {
+  const insets = useSafeAreaInsets();
   return (
     <FadeIn>
-      <View style={hdr.wrap}>
-        <View style={hdr.accent} />
+      <LinearGradient colors={SUNSET_HEADER} start={{x:0,y:0}} end={{x:1,y:1}} style={[hdr.wrap, { paddingTop: insets.top + 14 }]}>
         <View style={hdr.row}>
           <View style={{flex:1}}>
             <Text style={hdr.eyebrow}>AKIJ FEED</Text>
@@ -47,29 +51,32 @@ export function ScreenHeader({ title, sub, icon, badge }) {
             {sub && <Text style={hdr.sub}>{sub}</Text>}
           </View>
           <PopIn delay={80}>
-            <View style={hdr.iconBox}><Text style={{fontSize:22}}>{icon}</Text></View>
+            <View style={hdr.iconBox}>{typeof icon === "string" ? <Text style={{fontSize:22}}>{icon}</Text> : icon}</View>
           </PopIn>
         </View>
         {badge && <View style={{marginTop:10}}><PopIn delay={140}><Badge mode={badge}/></PopIn></View>}
-      </View>
+      </LinearGradient>
     </FadeIn>
   );
 }
 const hdr = StyleSheet.create({
-  wrap:    { paddingHorizontal:20, paddingBottom:16, borderBottomWidth:1, borderBottomColor:colors.border },
-  accent:  { height:3, backgroundColor:colors.brand, marginHorizontal:-20, marginBottom:16 },
+  wrap:    { paddingHorizontal:20, paddingTop:18, paddingBottom:18, borderBottomLeftRadius:22, borderBottomRightRadius:22 },
   row:     { flexDirection:"row", alignItems:"flex-end", justifyContent:"space-between" },
-  eyebrow: { fontFamily:fonts.label, fontSize:10, fontWeight:"700", letterSpacing:2, textTransform:"uppercase", color:colors.brand, marginBottom:4 },
-  title:   { fontFamily:fonts.display, fontSize:28, fontWeight:"700", color:colors.textPrimary, letterSpacing:0.2 },
-  sub:     { fontFamily:fonts.body, fontSize:13, color:colors.textSec, marginTop:3 },
-  iconBox: { width:46, height:46, borderRadius:13, backgroundColor:colors.surfaceUp, borderWidth:1.5, borderColor:colors.borderMid, alignItems:"center", justifyContent:"center" },
+  eyebrow: { fontFamily:fonts.label, fontSize:10, fontWeight:"700", letterSpacing:2, textTransform:"uppercase", color:"rgba(255,255,255,0.75)", marginBottom:4 },
+  title:   { fontFamily:fonts.display, fontSize:28, fontWeight:"700", color:"#fff", letterSpacing:0.2 },
+  sub:     { fontFamily:fonts.body, fontSize:13, color:"rgba(255,255,255,0.75)", marginTop:3 },
+  iconBox: { width:46, height:46, borderRadius:13, backgroundColor:"rgba(255,255,255,0.18)", alignItems:"center", justifyContent:"center" },
 });
 
 // ── Badge ────────────────────────────────────────────────────────
 export function Badge({ mode }) {
-  const m = { new:[S.badgeNew,S.badgeTextNew,"● READY"], edit:[S.badgeEdit,S.badgeTextEdit,"✎ EDITING"], ok:[S.badgeOk,S.badgeTextOk,"✓ SAVED"] };
+  const m = {
+    new:  [{ backgroundColor:"rgba(255,255,255,0.18)" }, { color:"#fff" }, "● READY"],
+    edit: [{ backgroundColor:"rgba(255,255,255,0.25)" }, { color:"#fff" }, "✎ EDITING"],
+    ok:   [{ backgroundColor:"rgba(255,255,255,0.30)" }, { color:"#fff" }, "✓ SAVED"],
+  };
   const [bg,tx,lbl] = m[mode]||m.new;
-  return <View style={[S.badge,bg]}><Text style={tx}>{lbl}</Text></View>;
+  return <View style={[S.badge,bg]}><Text style={[S.badgeTextNew, tx, { fontWeight:"700" }]}>{lbl}</Text></View>;
 }
 
 // ── Tag Label ─────────────────────────────────────────────────────
@@ -341,7 +348,7 @@ export function EmptyState({ icon="📋", title, sub }) {
   return (
     <FadeIn>
       <View style={S.emptyState}>
-        <Animated.View style={[S.emptyIconWrap,{transform:[{translateY:bounce}]}]}><Text style={S.emptyIcon}>{icon}</Text></Animated.View>
+        <Animated.View style={[S.emptyIconWrap,{transform:[{translateY:bounce}]}]}>{typeof icon === "string" ? <Text style={S.emptyIcon}>{icon}</Text> : icon}</Animated.View>
         <Text style={S.emptyText}>{title}</Text>
         <Text style={S.emptySub}>{sub}</Text>
       </View>

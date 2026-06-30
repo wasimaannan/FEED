@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllVisits, calcWeek } from "../api";
 import { colors, fonts } from "../theme";
 import { FadeIn, ScreenHeader, EmptyState } from "../components";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ActivityScreen() {
   const insets = useSafeAreaInsets();
@@ -25,8 +26,8 @@ export default function ActivityScreen() {
 
   return (
     <View style={{flex:1,backgroundColor:colors.bg}}>
-      <View style={{paddingTop:insets.top}}>
-        <ScreenHeader title="Visit Log" sub="All transactions · activity" icon="📊"/>
+      <View>
+        <ScreenHeader title="Visit Log" sub="All transactions · activity" icon={<Ionicons name="bar-chart-outline" size={22} color="#fff" />}/>
       </View>
 
       {/* Filter tabs */}
@@ -44,7 +45,7 @@ export default function ActivityScreen() {
         refreshControl={<RefreshControl refreshing={refresh} onRefresh={()=>{setRefresh(true);load();}} tintColor={colors.brand} colors={[colors.brand]}/>}
       >
         {sorted.length===0
-          ? <EmptyState icon="📊" title="No visits yet" sub="Visit records will appear here once logged"/>
+          ? <EmptyState icon={<Ionicons name="bar-chart-outline" size={28} color="#B89AAA" />} title="No visits yet" sub="Visit records will appear here once logged"/>
           : sorted.map((v,i)=>{
               const enroll = v.intEnroll||v.enroll;
               const ft     = v.strFirmType||v.firmType||"—";

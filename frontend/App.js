@@ -5,6 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Text, View, ActivityIndicator } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -23,36 +24,36 @@ const Stack = createNativeStackNavigator();
 
 function AppTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: "#C2386E", tabBarInactiveTintColor: "#B89AAA" }}>
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ tabBarLabel:"Home",     tabBarIcon:() => <Text style={{fontSize:18}}>⌂</Text> }}
+        options={{ tabBarLabel:"Home",     tabBarIcon:({color,size}) => <Ionicons name="home-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Doctors"
         component={DoctorsScreen}
-        options={{ tabBarLabel:"Doctors",  tabBarIcon:() => <Text style={{fontSize:18}}>✦</Text> }}
+        options={{ tabBarLabel:"Doctors",  tabBarIcon:({color,size}) => <Ionicons name="medkit-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="LogVisit"
         component={LogVisitScreen}
-        options={{ tabBarLabel:"Log",      tabBarIcon:() => <Text style={{fontSize:18}}>▤</Text> }}
+        options={{ tabBarLabel:"Log",      tabBarIcon:({color,size}) => <Ionicons name="add-circle-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Complaints"
         component={ComplaintScreen}
-        options={{ tabBarLabel:"Complaints", tabBarIcon:() => <Text style={{fontSize:18}}>⚑</Text> }}
+        options={{ tabBarLabel:"Complaints", tabBarIcon:({color,size}) => <Ionicons name="flag-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Activity"
         component={ActivityScreen}
-        options={{ tabBarLabel:"Activity", tabBarIcon:() => <Text style={{fontSize:18}}>◎</Text> }}
+        options={{ tabBarLabel:"Activity", tabBarIcon:({color,size}) => <Ionicons name="bar-chart-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarLabel:"Profile",  tabBarIcon:() => <Text style={{fontSize:18}}>◉</Text> }}
+        options={{ tabBarLabel:"Profile",  tabBarIcon:({color,size}) => <Ionicons name="person-outline" size={size} color={color} /> }}
       />
     </Tab.Navigator>
   );

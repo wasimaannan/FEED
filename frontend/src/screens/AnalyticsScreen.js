@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllDoctors, getAllVisits, getAllFarms, calcWeek } from "../api";
 import { colors, fonts } from "../theme";
 import { HeaderBand } from "../components";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function AnalyticsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -46,9 +47,9 @@ export default function AnalyticsScreen({ navigation }) {
   }, {});
 
   const summaryCards = [
-    { label: "Total farms",     value: farms.length,            sub: `+${Math.max(0, farms.length - 10)} new`,  icon: "🌿" },
-    { label: "This week visits",value: thisWeekVisits.length,   sub: `vs ${lastWeekVisits.length} last week`,   icon: "📋" },
-    { label: "Active doctors",  value: doctors.length,          sub: "All zones",                               icon: "🩺" },
+    { label: "Total farms",     value: farms.length,            sub: `+${Math.max(0, farms.length - 10)} new`,  icon: <Ionicons name="leaf-outline" size={20} color="#8B3FA8" /> },
+    { label: "This week visits",value: thisWeekVisits.length,   sub: `vs ${lastWeekVisits.length} last week`,   icon: <Ionicons name="clipboard-outline" size={20} color="#C2386E" /> },
+    { label: "Active doctors",  value: doctors.length,          sub: "All zones",                               icon: <Ionicons name="medkit-outline" size={20} color="#FF6B6B" /> },
     { label: "Zones covered",   value: Object.keys(zoneStats).length, sub: "Active",                           icon: "📍" },
   ];
 
@@ -59,7 +60,7 @@ export default function AnalyticsScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refresh} onRefresh={() => { setRefresh(true); load(); }} tintColor={colors.gold} colors={[colors.gold]} />}
     >
-      <HeaderBand navigation={navigation} color={colors.brand} icon="📊" title="Analytics" sub="Performance overview" />
+      <HeaderBand navigation={navigation} color={colors.brand} icon={<Ionicons name="stats-chart-outline" size={22} color="#fff" />} title="Analytics" sub="Performance overview" />
 
       {/* Summary cards */}
       <View style={styles.cardGrid}>
