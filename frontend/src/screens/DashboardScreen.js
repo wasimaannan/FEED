@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Animated, StyleSheet, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllDoctors, getAllVisits, getAllFarms, calcWeek } from "../api";
+import { useAuth } from "../context/AuthContext";
 import { colors, fonts } from "../theme";
 
 function StatCard({ label, value, sub, color, icon, delay }) {
@@ -28,6 +29,7 @@ function StatCard({ label, value, sub, color, icon, delay }) {
 
 export default function DashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [doctors,setDoctors]=useState([]);
   const [visits, setVisits] =useState([]);
   const [farms,  setFarms]  =useState([]);
@@ -56,6 +58,10 @@ export default function DashboardScreen({ navigation }) {
 
   const ZONE_COLORS  = [colors.brand, colors.brandMid, colors.gold, colors.moduleAct, "#8B5CF6"];
 
+  const initials = user && user.fullName 
+    ? user.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() 
+    : "US";
+
   return (
     <ScrollView style={{flex:1,backgroundColor:colors.bg}}
       contentContainerStyle={{paddingBottom:insets.bottom+88}}
@@ -70,7 +76,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={d.title}>Dashboard</Text>
             <Text style={d.sub}>Week {weekNum} · {dateStr}</Text>
           </View>
-          <View style={d.avatar}><Text style={d.avatarTxt}>AU</Text></View>
+          <View style={d.avatar}><Text style={d.avatarTxt}>{initials}</Text></View>
         </View>
         <View style={d.searchBar}>
           <Text style={{fontSize:15,color:colors.textTer,marginRight:8}}>⌕</Text>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getAllDoctors, saveDoctor } from "../api";
+import { getAllDoctors, getDoctor, saveDoctor } from "../api";
 import { ZONES, SPECIALIZATIONS, colors } from "../theme";
 import { FadeIn, ScreenHeader, SearchPanel, TagLabel, FormField, PickerField, PillGroup, ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, SectionDivider } from "../components";
 import { S } from "../theme";
@@ -30,23 +30,40 @@ export default function DoctorsScreen() {
   const checkEnroll = useCallback(async v=>{
     setEnroll(v);
     if (mode!=="new"||!v||v.length<4){setShowOverwrite(false);return;}
-    try { const docs=await getAllDoctors(); setShowOverwrite(docs.some(d=>String(d.intEnroll)===String(v))); } catch(_){}
+    try { const docs=await getAllDoctors(); setShowOverwrite(docs.some(d => String(d.EnrollID) === String(v))); } catch(_){}
   },[mode]);
 
-  const lookup = useCallback(async()=>{
-    if (!searchId.trim()){toastRef.current?.show("Enter an Enrol ID first","err");return;}
+  const lookup = useCallback(async () => {
+    if (!searchId.trim()) {
+      toastRef.current?.show("Enter an Enrol ID first", "err");
+      return;
+    }
+
     setSearching(true);
+
     try {
-      const docs=await getAllDoctors();
-      const row=docs.find(d=>String(d.intEnroll)===String(searchId.trim()));
-      if (!row){toastRef.current?.show("No doctor found","err");return;}
-      setZone(row.strZone||"");setEnroll(String(row.intEnroll));setName(row.strDoctorName||"");
-      setSpec(row.strSpecialization||"");setBroiler(String(row.intBroiler||""));setLayer(String(row.intLayer||""));
-      setSonali(String(row.intSonali||""));setUnderSvc(String(row.intUnderService||""));setSvcTarget(String(row.intServiceTarget||""));
-      setBadge("edit"); toastRef.current?.show("Doctor loaded","ok");
-    } catch(e){toastRef.current?.show(e.message,"err");}
-    finally{setSearching(false);}
-  },[searchId]);
+      const row = await getDoctor(searchId.trim());
+
+      setZone(row.ZoneName || "");
+      setEnroll(String(row.EnrollID));
+      setName(row.FullName || "");
+      setSpec(row.Specialization || "");
+
+      // These columns don't exist yet in SQL
+      setBroiler("");
+      setLayer("");
+      setSonali("");
+      setUnderSvc("");
+      setSvcTarget(String(row.ServiceTarget || ""));
+
+      setBadge("edit");
+      toastRef.current?.show("Doctor loaded", "ok");
+    } catch (e) {
+      toastRef.current?.show("Doctor not found", "err");
+    } finally {
+      setSearching(false);
+    }
+  }, [searchId]);
 
   const handleSave = useCallback(async()=>{
     if (!zone||!enroll||!name.trim()){toastRef.current?.show("Zone, Enrol ID and Name required","err");return;}

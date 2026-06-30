@@ -3,9 +3,12 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Animated, KeyboardAvoidingView,
-  Platform, ScrollView, ActivityIndicator,
+  Platform, ScrollView, ActivityIndicator, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../context/AuthContext";
+import { forgotUserPassword } from "../api";
+import { PickerField } from "../components";
 
 // ── Brand colors matching your existing theme ──────────────────
 const C = {
@@ -25,13 +28,18 @@ const C = {
 // ── Dev bypass — set to true to skip login ─────────────────────
 const DEV_BYPASS = true;
 
+const AVAILABLE_ZONES = ["HQ", "East", "West", "North", "South", "Central"];
+
 export default function LoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { login, signup, devBypassLogin } = useAuth();
+
   const [mode,     setMode]     = useState("login");
-  const [email,    setEmail]    = useState("");
+  const [email,    setEmail]    = useState(""); // maps to Username
   const [password, setPassword] = useState("");
-  const [name,     setName]     = useState("");
-  const [empId,    setEmpId]    = useState("");
+  const [name,     setName]     = useState(""); // maps to FullName
+  const [empId,    setEmpId]    = useState(""); // maps to EnrollID
+  const [zone,     setZone]     = useState("HQ"); // maps to ZoneName
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
 
@@ -45,19 +53,77 @@ export default function LoginScreen({ navigation }) {
     ]).start();
   }, []);
 
-  const goToApp = () => navigation.replace("App");
+  const goToApp = () => devBypassLogin();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields"); return;
+    
+    if (mode === "login") {
+      if (!empId.trim() || !password.trim()) {
+        setError("Please fill in Enroll ID and Password");
+        return;
+      }
+      
+      const parsedId = parseInt(empId.trim(), 10);
+      if (isNaN(parsedId)) {
+        setError("Enroll ID must be a valid number");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await login(parsedId, password);
+      } catch (err) {
+        setError(err.message || "Invalid Enroll ID or Password");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // signup mode
+      if (!name.trim() || !empId.trim() || !email.trim() || !password.trim()) {
+        setError("Please fill in all fields");
+        return;
+      }
+
+      const parsedId = parseInt(empId.trim(), 10);
+      if (isNaN(parsedId)) {
+        setError("Enroll ID must be a valid number");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await signup(parsedId, email.trim(), name.trim(), password, zone);
+      } catch (err) {
+        setError(err.message || "Failed to create account");
+      } finally {
+        setLoading(false);
+      }
     }
-    if (mode === "signup" && (!name.trim() || !empId.trim())) {
-      setError("Please fill in all fields"); return;
+  };
+
+  const handleForgotPassword = async () => {
+    setError("");
+    if (!empId.trim()) {
+      setError("Please enter your Enroll ID first to request a password reset");
+      return;
     }
+
+    const parsedId = parseInt(empId.trim(), 10);
+    if (isNaN(parsedId)) {
+      setError("Enroll ID must be a valid number");
+      return;
+    }
+
     setLoading(true);
-    // Simulated auth — replace with real API call later
-    setTimeout(() => { setLoading(false); goToApp(); }, 1000);
+    try {
+      await forgotUserPassword(parsedId);
+      Alert.alert("Success", "Password reset request has been sent.");
+    } catch (err) {
+      setError(err.message || "Forgot password request failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,12 +164,26 @@ export default function LoginScreen({ navigation }) {
           {/* Signup-only fields */}
           {mode === "signup" && (
             <>
-              <Field label="Full name"    value={name}  onChange={setName}  placeholder="e.g. Wasim Annan" />
-              <Field label="Employee ID"  value={empId} onChange={setEmpId} placeholder="e.g. AKJ-2024-001" />
+              <Field label="Full name" value={name} onChange={setName} placeholder="e.g. Wasim Annan" />
+              <Field label="Enroll ID" value={empId} onChange={setEmpId} placeholder="e.g. 1001" keyboardType="numeric" />
+              <Field label="Username / Email" value={email} onChange={setEmail} placeholder="you@akijfeed.com" keyboardType="email-address" />
+              
+              <View style={{ marginBottom: 14 }}>
+                <PickerField
+                  label="Zone Name"
+                  value={zone}
+                  onValueChange={setZone}
+                  items={AVAILABLE_ZONES}
+                />
+              </View>
             </>
           )}
 
-          <Field label="Email"    value={email}    onChange={setEmail}    placeholder="you@akijfeed.com" keyboardType="email-address" />
+          {/* Login-only fields */}
+          {mode === "login" && (
+            <Field label="Enroll ID" value={empId} onChange={setEmpId} placeholder="e.g. 1001" keyboardType="numeric" />
+          )}
+
           <Field label="Password" value={password} onChange={setPassword} placeholder="••••••••" secure />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -116,7 +196,7 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
 
           {mode === "login" && (
-            <TouchableOpacity style={styles.forgotWrap}>
+            <TouchableOpacity style={styles.forgotWrap} onPress={handleForgotPassword}>
               <Text style={styles.forgotTxt}>Forgot password?</Text>
             </TouchableOpacity>
           )}
