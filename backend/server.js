@@ -7,6 +7,7 @@ const farmsRouter = require("./routes/farms");
 const visitsRouter = require("./routes/visits");
 const usersRouter = require("./routes/users");
 const complaintsRouter = require("./routes/complaints");
+const settingsRouter = require("./routes/settings");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ app.use("/api/farms", farmsRouter);
 app.use("/api/visits", visitsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/complaints", complaintsRouter);
+app.use("/api/settings", settingsRouter);
 
 
 app.use((req, res) => {

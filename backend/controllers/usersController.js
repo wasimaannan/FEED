@@ -223,3 +223,35 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+// ================= UPDATE PHONE BY ENROLL ID =================
+
+exports.updatePhoneByEnroll = async (req, res) => {
+  try {
+    const { EnrollID, Phone } = req.body;
+    if (!EnrollID || !Phone) {
+      return res.status(400).json({ success: false, error: "EnrollID and Phone are required" });
+    }
+
+    await pool
+      .request()
+      .input("EnrollID", EnrollID)
+      .input("Phone", Phone)
+      .query(`
+        UPDATE farm.Users
+        SET Phone = @Phone
+        WHERE EnrollID = @EnrollID
+      `);
+
+    res.json({
+      success: true,
+      message: "Phone number updated successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};

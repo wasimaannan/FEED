@@ -105,20 +105,24 @@ export default function LoginScreen({ navigation }) {
   const handleForgotPassword = async () => {
     setError("");
     if (!empId.trim()) {
-      setError("Please enter your Enroll ID first to request a password reset");
+      setError("Please enter your Enrol ID in the Enrol ID field first.");
+      return;
+    }
+    if (!password.trim()) {
+      setError("Please enter your Phone number in the Password field to verify, then click Forgot password.");
       return;
     }
 
     const parsedId = parseInt(empId.trim(), 10);
     if (isNaN(parsedId)) {
-      setError("Enroll ID must be a valid number");
+      setError("Enrol ID must be a valid number");
       return;
     }
 
     setLoading(true);
     try {
-      await forgotUserPassword(parsedId);
-      Alert.alert("Success", "Password reset request has been sent.");
+      await forgotUserPassword({ enrollId: parsedId, phone: password.trim() });
+      Alert.alert("Success", "Forgot password request sent successfully. Please check with your administrator for recovery.");
     } catch (err) {
       setError(err.message || "Forgot password request failed");
     } finally {

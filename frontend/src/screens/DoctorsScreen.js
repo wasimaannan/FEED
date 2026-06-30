@@ -1,14 +1,16 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getAllDoctors, getDoctor, saveDoctor } from "../api";
+import { getAllDoctors, getDoctor, saveDoctor, getSettingsZones, getSettingsFarmTypes } from "../api";
 import { ZONES, SPECIALIZATIONS, colors } from "../theme";
 import { FadeIn, ScreenHeader, SearchPanel, TagLabel, FormField, PickerField, PillGroup, ModeToggle, WarnBanner, PrimaryBtn, GhostBtn, Toast, SectionDivider } from "../components";
 import { S } from "../theme";
+import { useAuth } from "../context/AuthContext";
 
 export default function DoctorsScreen() {
   const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
+  const { user } = useAuth();
   const [mode,setMode]=useState("new");
   const [badge,setBadge]=useState("new");
   const [searching,setSearching]=useState(false);
@@ -19,13 +21,28 @@ export default function DoctorsScreen() {
   const [enroll,setEnroll]=useState("");
   const [name,setName]=useState("");
   const [spec,setSpec]=useState("");
-  const [broiler,setBroiler]=useState("");
-  const [layer,setLayer]=useState("");
-  const [sonali,setSonali]=useState("");
   const [underSvc,setUnderSvc]=useState("");
   const [svcTarget,setSvcTarget]=useState("");
 
-  const clearForm = useCallback(()=>{ setSearchId("");setZone("");setEnroll("");setName("");setSpec("");setBroiler("");setLayer("");setSonali("");setUnderSvc("");setSvcTarget("");setShowOverwrite(false);setBadge("new"); },[]);
+  const [zonesList, setZonesList] = useState(ZONES);
+  const [specializationsList, setSpecializationsList] = useState(["Broiler", "Layer", "Cattle", "Sonali"]);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const zones = await getSettingsZones();
+        if (zones && Array.isArray(zones)) {
+          const mappedZones = zones.map(z => z.Zone || z.ZoneName || z.zoneName).filter(Boolean);
+          if (mappedZones.length > 0) setZonesList(mappedZones);
+        }
+      } catch (e) {
+        console.warn("Failed to load zones dynamically, using fallback:", e);
+      }
+    }
+    loadSettings();
+  }, []);
+
+  const clearForm = useCallback(()=>{ setSearchId("");setZone("");setEnroll("");setName("");setSpec("");setUnderSvc("");setSvcTarget("");setShowOverwrite(false);setBadge("new"); },[]);
 
   const checkEnroll = useCallback(async v=>{
     setEnroll(v);
@@ -50,9 +67,6 @@ export default function DoctorsScreen() {
       setSpec(row.Specialization || "");
 
       // These columns don't exist yet in SQL
-      setBroiler("");
-      setLayer("");
-      setSonali("");
       setUnderSvc("");
       setSvcTarget(String(row.ServiceTarget || ""));
 
@@ -69,11 +83,19 @@ export default function DoctorsScreen() {
     if (!zone||!enroll||!name.trim()){toastRef.current?.show("Zone, Enrol ID and Name required","err");return;}
     setSaving(true);
     try {
-      await saveDoctor({intEnroll:Number(enroll),strDoctorName:name.trim(),strZone:zone,strSpecialization:spec,intBroiler:Number(broiler)||0,intLayer:Number(layer)||0,intSonali:Number(sonali)||0,intUnderService:Number(underSvc)||0,intServiceTarget:Number(svcTarget)||0});
+      await saveDoctor({
+        intEnroll:Number(enroll),
+        strDoctorName:name.trim(),
+        strZone:zone,
+        strSpecialization:spec,
+        intUnderService:Number(underSvc)||0,
+        intServiceTarget:Number(svcTarget)||0,
+        CreatedByUserID: user ? user.enrollId : 0
+      });
       setBadge("ok"); toastRef.current?.show(mode==="new"?"Doctor added!":"Doctor updated!","ok");
     } catch(e){toastRef.current?.show(e.message,"err");}
     finally{setSaving(false);}
-  },[zone,enroll,name,spec,broiler,layer,sonali,underSvc,svcTarget,mode]);
+  },[zone,enroll,name,spec,underSvc,svcTarget,mode,user]);
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS==="ios"?"padding":undefined}>
@@ -94,18 +116,13 @@ export default function DoctorsScreen() {
                 <FormField label="Full Name" value={name} onChangeText={setName} placeholder="Dr. Full Name" required/>
                 <View style={S.grid2}>
                   <FormField label="Enrol ID" value={enroll} onChangeText={checkEnroll} keyboardType="numeric" placeholder="e.g. 565609" required style={{flex:1}}/>
-                  <PickerField label="Zone" value={zone} onValueChange={setZone} items={ZONES} required style={{flex:1}}/>
+                  <PickerField label="Zone" value={zone} onValueChange={setZone} items={zonesList} required style={{flex:1}}/>
                 </View>
-                <PickerField label="Specialization" value={spec} onValueChange={setSpec} items={SPECIALIZATIONS}/>
+                <PickerField label="Specialization" value={spec} onValueChange={setSpec} items={specializationsList}/>
               </FadeIn>
 
               <FadeIn delay={160}>
                 <SectionDivider label="Farm Coverage"/>
-                <View style={S.grid3}>
-                  <FormField label="Broiler" value={broiler} onChangeText={setBroiler} keyboardType="numeric" placeholder="0" style={{flex:1}}/>
-                  <FormField label="Layer"   value={layer}   onChangeText={setLayer}   keyboardType="numeric" placeholder="0" style={{flex:1}}/>
-                  <FormField label="Sonali"  value={sonali}  onChangeText={setSonali}  keyboardType="numeric" placeholder="0" style={{flex:1}}/>
-                </View>
                 <View style={S.grid2}>
                   <FormField label="Under Service" value={underSvc}  onChangeText={setUnderSvc}  keyboardType="numeric" placeholder="0" style={{flex:1}}/>
                   <FormField label="Svc Target"    value={svcTarget} onChangeText={setSvcTarget} keyboardType="numeric" placeholder="0" style={{flex:1}}/>

@@ -6,7 +6,7 @@ import { FIRM_TYPES, MORTALITY, FEED_QUALITY, colors, fonts } from "../theme";
 import { S } from "../theme";
 import { FadeIn, ScreenHeader, SearchPanel, TagLabel, SectionDivider, LockedField, FormField, PickerField, PillGroup, ValidationBox, TsPill, PrimaryBtn, GhostBtn, Toast, EmptyState, InfoBanner } from "../components";
 
-export default function LogVisitScreen({ navigation }) {
+export default function LogVisitScreen({ navigation, route }) {
   const insets   = useSafeAreaInsets();
   const toastRef = useRef(null);
   const [searching,setSearching]=useState(false);
@@ -16,6 +16,35 @@ export default function LogVisitScreen({ navigation }) {
   const [showTs,setShowTs]=useState(false);
   const [savedAt,setSavedAt]=useState("");
   const [badge,setBadge]=useState("new");
+
+  const enrollParam = route?.params?.enrollId;
+
+  const autoLookup = useCallback(async (eid) => {
+    setSearching(true);
+    try {
+      const docs = await getAllDoctors().catch(() => []);
+      const row = docs.find(d => String(d.EnrollID || d.intEnroll) === String(eid));
+      if (row) {
+        setDoctor({
+          enroll: row.EnrollID || row.intEnroll,
+          name: row.FullName || row.strDoctorName,
+          zone: row.ZoneName || row.strZone
+        });
+        toastRef.current?.show("Doctor loaded — fill visit details", "ok");
+      }
+    } catch (e) {
+      console.warn("Auto-lookup failed:", e);
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (enrollParam) {
+      setSearchId(String(enrollParam));
+      autoLookup(String(enrollParam));
+    }
+  }, [enrollParam, autoLookup]);
 
   // Visit fields
   const [date,setDate]=useState("");
@@ -58,16 +87,19 @@ export default function LogVisitScreen({ navigation }) {
   },[]);
 
   const lookup = useCallback(async()=>{
-    if (!searchId.trim()){toastRef.current?.show("Enter an Enrol ID","err");return;}
+    if (!searchId.trim()){toastRef.current?.show("Enter an Enrol ID or name","err");return;}
     setSearching(true);
     try {
       const docs=await getAllDoctors().catch(()=>[]);
-      const row=docs.find(d=>String(d.intEnroll)===String(searchId.trim()));
+      const row=docs.find(d=>
+        String(d.intEnroll || d.EnrollID) === String(searchId.trim()) ||
+        String(d.strDoctorName || d.FullName || "").toLowerCase().includes(searchId.toLowerCase().trim())
+      );
       if (row){
-        setDoctor({enroll:row.intEnroll,name:row.strDoctorName,zone:row.strZone});
+        setDoctor({enroll:row.intEnroll || row.EnrollID,name:row.strDoctorName || row.FullName,zone:row.strZone || row.ZoneName});
         toastRef.current?.show("Doctor loaded — fill visit details","ok");
       } else {
-        toastRef.current?.show("No doctor found for Enrol ID "+searchId,"err");
+        toastRef.current?.show("No doctor found for "+searchId,"err");
       }
     } catch(e){toastRef.current?.show(e.message,"err");}
     finally{setSearching(false);}

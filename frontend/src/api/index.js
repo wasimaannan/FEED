@@ -162,11 +162,12 @@ export async function changeUserPassword({ enrollId, oldPassword, newPassword })
   });
 }
 
-export async function forgotUserPassword(enrollId) {
+export async function forgotUserPassword({ enrollId, phone }) {
   return await authRequest("/forgot-password", {
     method: "POST",
     body: JSON.stringify({
       EnrollID: Number(enrollId),
+      Phone: phone,
     }),
   });
 }
@@ -180,5 +181,25 @@ export async function getUserProfile(enrollId) {
 export async function logoutUser(enrollId) {
   return await authRequest(`/logout?EnrollID=${enrollId}`, {
     method: "POST",
+  });
+}
+
+export async function getSettingsZones() {
+  const res = await request("/settings/zones");
+  return res.data;
+}
+
+export async function getSettingsFarmTypes() {
+  const res = await request("/settings/farm-types");
+  return res.data;
+}
+
+export async function updateUserPhone({ enrollId, phone }) {
+  return await request("/users/update-phone", {
+    method: "POST",
+    body: JSON.stringify({
+      EnrollID: Number(enrollId),
+      Phone: phone,
+    }),
   });
 }

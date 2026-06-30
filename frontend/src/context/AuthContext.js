@@ -6,6 +6,7 @@ import {
   changeUserPassword,
   getUserProfile,
   logoutUser,
+  updateUserPhone,
 } from "../api";
 
 const AuthContext = createContext(null);
@@ -86,7 +87,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = async (enrollId, username, fullName, password, zoneName) => {
+  const signup = async (enrollId, username, fullName, password, zoneName, phone) => {
     try {
       await registerUser({
         enrollId: Number(enrollId),
@@ -95,6 +96,14 @@ export function AuthProvider({ children }) {
         password,
         zoneName,
       });
+
+      if (phone) {
+        try {
+          await updateUserPhone({ enrollId, phone });
+        } catch (e) {
+          console.warn("Failed to update user phone number locally:", e);
+        }
+      }
 
       // Automatically log in after registration
       return await login(enrollId, password);

@@ -14,6 +14,7 @@ import DoctorsScreen   from "./src/screens/DoctorsScreen";
 import LogVisitScreen  from "./src/screens/LogVisitScreen";
 import ActivityScreen  from "./src/screens/ActivityScreen";
 import ProfileScreen   from "./src/screens/ProfileScreen";
+import ComplaintScreen from "./src/screens/ComplaintScreen";
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
@@ -22,31 +23,36 @@ const Stack = createNativeStackNavigator();
 
 function AppTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ tabBarLabel:"Home",     tabBarIcon:() => <Text style={{fontSize:20}}>🏠</Text> }}
+        options={{ tabBarLabel:"Home",     tabBarIcon:() => <Text style={{fontSize:18}}>⌂</Text> }}
       />
       <Tab.Screen
         name="Doctors"
         component={DoctorsScreen}
-        options={{ tabBarLabel:"Doctors",  tabBarIcon:() => <Text style={{fontSize:20}}>🩺</Text> }}
+        options={{ tabBarLabel:"Doctors",  tabBarIcon:() => <Text style={{fontSize:18}}>✦</Text> }}
       />
       <Tab.Screen
         name="LogVisit"
         component={LogVisitScreen}
-        options={{ tabBarLabel:"Log",      tabBarIcon:() => <Text style={{fontSize:20}}>📋</Text> }}
+        options={{ tabBarLabel:"Log",      tabBarIcon:() => <Text style={{fontSize:18}}>▤</Text> }}
+      />
+      <Tab.Screen
+        name="Complaints"
+        component={ComplaintScreen}
+        options={{ tabBarLabel:"Complaints", tabBarIcon:() => <Text style={{fontSize:18}}>⚑</Text> }}
       />
       <Tab.Screen
         name="Activity"
         component={ActivityScreen}
-        options={{ tabBarLabel:"Activity", tabBarIcon:() => <Text style={{fontSize:20}}>📊</Text> }}
+        options={{ tabBarLabel:"Activity", tabBarIcon:() => <Text style={{fontSize:18}}>◎</Text> }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarLabel:"Profile",  tabBarIcon:() => <Text style={{fontSize:20}}>👤</Text> }}
+        options={{ tabBarLabel:"Profile",  tabBarIcon:() => <Text style={{fontSize:18}}>◉</Text> }}
       />
     </Tab.Navigator>
   );
