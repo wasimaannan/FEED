@@ -29,10 +29,48 @@ export async function getDoctor(id) {
   return res.data;
 }
 
-export async function saveDoctor(data) {
-  return await request("/doctors", {
-    method: "POST",
-    body: JSON.stringify(data),
+/**
+ * Save doctor directly to external API
+ * @param {Object} data - Doctor data
+ * @param {string} mode - 'new' or 'edit'
+ */
+export async function saveDoctor(data, mode = "new") {
+  const isEdit = mode === "edit";
+  const enroll = data.intEnroll || data.EnrollID;
+  const endpoint = isEdit ? `/doctors/edit/${enroll}` : "/doctors/create";
+  const method = isEdit ? "PUT" : "POST";
+
+  // Map Specialization to valid API values
+  let apiSpecialization = data.strSpecialization || data.Specialization || "";
+  if (apiSpecialization) {
+    const specLower = apiSpecialization.toLowerCase();
+    if (specLower === "broiler" || specLower === "layer" || specLower === "sonali" || specLower === "poultry") {
+      apiSpecialization = "Poultry";
+    } else if (specLower === "cattle") {
+      apiSpecialization = "Cattle";
+    } else if (specLower === "fish") {
+      apiSpecialization = "Fish";
+    }
+  }
+
+  // Construct payload for external API
+  const payload = {
+    EnrollID: Number(enroll),
+    FullName: data.strDoctorName || data.FullName || "",
+    Specialization: apiSpecialization,
+    ZoneName: data.strZone || data.ZoneName || "",
+    ZoneID: data.ZoneID || 0, // Should be passed from UI
+    ActiveFarm: Number(data.ActiveFarm) || (Number(data.intBroiler || 0) + Number(data.intLayer || 0) + Number(data.intSonali || 0)) || 0,
+    UnderService: Number(data.intUnderService || data.UnderService || 0),
+    ServiceTarget: Number(data.intServiceTarget || data.ServiceTarget || 0),
+    IsActive: data.IsActive ?? true,
+    CreatedByUserID: Number(data.CreatedByUserID || 0)
+  };
+
+  return await authRequest(endpoint, {
+    method,
+    body: JSON.stringify(payload),
+    prefix: ""
   });
 }
 
@@ -100,15 +138,18 @@ export function calcWeek(dateString) {
 }
 
 // ===================== AUTH =====================
-const AUTH_API_URL = "https://arlapi.ibos.io/api/v1/auth";
+const EXTERNAL_API_BASE = "https://arlapi.ibos.io/api/v1";
 
 async function authRequest(endpoint, options = {}) {
-  const response = await fetch(`${AUTH_API_URL}${endpoint}`, {
+  const { prefix = "/auth", ...fetchOptions } = options;
+  const url = `${EXTERNAL_API_BASE}${prefix}${endpoint}`;
+
+  const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
       "accept": "application/json",
     },
-    ...options,
+    ...fetchOptions,
   });
 
   const text = await response.text();
@@ -122,7 +163,13 @@ async function authRequest(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(json.message || json.error || "Authentication request failed");
+    // Handle complex error objects from API
+    let errorMsg = json.message || json.error || "Authentication request failed";
+    if (json.detail) {
+      if (typeof json.detail === "string") errorMsg = json.detail;
+      else if (Array.isArray(json.detail)) errorMsg = json.detail.map(d => d.msg).join(", ");
+    }
+    throw new Error(errorMsg);
   }
 
   return json;
@@ -185,13 +232,11 @@ export async function logoutUser(enrollId) {
 }
 
 export async function getSettingsZones() {
-  const res = await request("/settings/zones");
-  return res.data;
+  return await authRequest("/zones", { prefix: "/settings", method: "GET" });
 }
 
 export async function getSettingsFarmTypes() {
-  const res = await request("/settings/farm-types");
-  return res.data;
+  return await authRequest("/farm-types", { prefix: "/settings", method: "GET" });
 }
 
 export async function updateUserPhone({ enrollId, phone }) {

@@ -26,6 +26,7 @@ export default function DoctorsScreen() {
   const [svcTarget,setSvcTarget]=useState("");
 
   const [zonesList, setZonesList] = useState(ZONES);
+  const [rawZones, setRawZones] = useState([]);
   const [specializationsList, setSpecializationsList] = useState(["Broiler", "Layer", "Cattle", "Sonali"]);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function DoctorsScreen() {
       try {
         const zones = await getSettingsZones();
         if (zones && Array.isArray(zones)) {
+          setRawZones(zones);
           const mappedZones = zones.map(z => z.Zone || z.ZoneName || z.zoneName).filter(Boolean);
           if (mappedZones.length > 0) setZonesList(mappedZones);
         }
@@ -83,20 +85,26 @@ export default function DoctorsScreen() {
   const handleSave = useCallback(async()=>{
     if (!zone||!enroll||!name.trim()){toastRef.current?.show("Zone, Enrol ID and Name required","err");return;}
     setSaving(true);
+
+    // Find ZoneID from rawZones
+    const zoneObj = rawZones.find(z => (z.Zone || z.ZoneName || z.zoneName) === zone);
+    const zoneId = zoneObj ? (zoneObj.ZoneID || zoneObj.zoneId) : 0;
+
     try {
       await saveDoctor({
         intEnroll:Number(enroll),
         strDoctorName:name.trim(),
         strZone:zone,
+        ZoneID: zoneId,
         strSpecialization:spec,
         intUnderService:Number(underSvc)||0,
         intServiceTarget:Number(svcTarget)||0,
         CreatedByUserID: user ? user.enrollId : 0
-      });
+      }, mode);
       setBadge("ok"); toastRef.current?.show(mode==="new"?"Doctor added!":"Doctor updated!","ok");
     } catch(e){toastRef.current?.show(e.message,"err");}
     finally{setSaving(false);}
-  },[zone,enroll,name,spec,underSvc,svcTarget,mode,user]);
+  },[zone,enroll,name,spec,underSvc,svcTarget,mode,user,rawZones]);
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS==="ios"?"padding":undefined}>
