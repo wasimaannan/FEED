@@ -384,15 +384,26 @@ export const Toast = React.forwardRef((_,ref)=>{
     },
   }));
   if (!visible) return null;
-  const cfg={ok:{bg:colors.successBg,border:colors.successBorder,icon:"✓",tc:colors.success},warn:{bg:colors.warningBg,border:colors.warningBorder,icon:"⚠",tc:colors.warning},err:{bg:colors.dangerBg,border:colors.dangerBorder,icon:"✕",tc:colors.danger}}[type]||{};
+  const cfg={
+    ok:  {icon:"✓", tc:"#1A9C5C", label:"Success"},
+    warn:{icon:"⚠", tc:"#F2542D", label:"Warning"},
+    err: {icon:"✕", tc:"#D6336C", label:"Failed"},
+  }[type]||{icon:"●",tc:"#1F1320",label:""};
   return (
-    <Animated.View style={[toast.wrap,{backgroundColor:cfg.bg,borderColor:cfg.border,opacity:op,transform:[{translateY:ty},{scale:sc}]}]}>
-      <Text style={{fontSize:13,color:cfg.tc,fontWeight:"800"}}>{cfg.icon}</Text>
-      <Text style={[toast.txt,{color:cfg.tc}]}>{msg}</Text>
+    <Animated.View style={[toast.wrap,{opacity:op,transform:[{translateY:ty},{scale:sc}]}]}>
+      <View style={[toast.iconBox,{backgroundColor:cfg.tc+"15",borderColor:cfg.tc+"30"}]}>
+        <Text style={{fontSize:14,color:cfg.tc,fontWeight:"800"}}>{cfg.icon}</Text>
+      </View>
+      <View style={{flex:1}}>
+        <Text style={[toast.label,{color:cfg.tc}]}>{cfg.label}</Text>
+        <Text style={toast.txt}>{msg}</Text>
+      </View>
     </Animated.View>
   );
 });
 const toast=StyleSheet.create({
-  wrap:{position:"absolute",top:14,left:16,right:16,flexDirection:"row",alignItems:"center",gap:10,padding:14,borderRadius:14,borderWidth:1,zIndex:999,elevation:12,shadowColor:"#000",shadowOpacity:0.12,shadowRadius:18,shadowOffset:{width:0,height:4}},
-  txt: {fontFamily:fonts.body,fontSize:13.5,fontWeight:"600",flex:1,lineHeight:19},
+  wrap:    {position:"absolute",top:14,left:16,right:16,flexDirection:"row",alignItems:"center",gap:12,padding:14,borderRadius:16,borderWidth:1,borderColor:"#F0E5EA",backgroundColor:"#FFFFFF",zIndex:999,elevation:16,shadowColor:"#000",shadowOpacity:0.10,shadowRadius:20,shadowOffset:{width:0,height:6}},
+  iconBox: {width:36,height:36,borderRadius:10,alignItems:"center",justifyContent:"center",borderWidth:1},
+  label:   {fontFamily:fonts.label,fontSize:11,fontWeight:"700",textTransform:"uppercase",letterSpacing:0.8,marginBottom:2},
+  txt:     {fontFamily:fonts.body,fontSize:13.5,color:"#1F1320",lineHeight:18},
 });

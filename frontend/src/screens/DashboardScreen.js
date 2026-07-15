@@ -124,7 +124,7 @@ export default function DashboardScreen({ navigation }) {
             <LinearGradient colors={G.doctors} style={d.secBar}/>
             <Text style={d.secTitle}>Search results ({
               doctors.filter(doc => 
-                String(doc.EnrollID || doc.intEnroll || "").toLowerCase().includes(search.toLowerCase()) ||
+                String(doc.EnrollID || doc.enrollID || doc.intEnroll || "").toLowerCase().includes(search.toLowerCase()) ||
                 String(doc.FullName || doc.strDoctorName || "").toLowerCase().includes(search.toLowerCase())
               ).length
             })</Text>
@@ -133,7 +133,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={[d.card,{marginHorizontal:16}]}>
             {(() => {
               const matches = doctors.filter(doc => 
-                String(doc.EnrollID || doc.intEnroll || "").toLowerCase().includes(search.toLowerCase()) ||
+                String(doc.EnrollID || doc.enrollID || doc.intEnroll || "").toLowerCase().includes(search.toLowerCase()) ||
                 String(doc.FullName || doc.strDoctorName || "").toLowerCase().includes(search.toLowerCase())
               );
               return matches.length === 0 ? (
@@ -143,11 +143,11 @@ export default function DashboardScreen({ navigation }) {
                   <TouchableOpacity key={doc.DoctorID || idx} style={[d.visitRow, idx < Math.min(matches.length, 10) - 1 && {borderBottomWidth:1,borderBottomColor:NEUTRAL.border}]}
                     onPress={() => {
                       setSearch("");
-                      navigation.navigate("LogVisit", { enrollId: doc.EnrollID || doc.intEnroll });
+                      navigation.navigate("LogVisit", { enrollId: doc.EnrollID || doc.enrollID || doc.intEnroll });
                     }}
                     activeOpacity={0.7}
                   >
-                    <LinearGradient colors={G.doctors} style={d.visitBadge}><Text style={d.visitBadgeTxt}>#{doc.EnrollID || doc.intEnroll}</Text></LinearGradient>
+                    <LinearGradient colors={G.doctors} style={d.visitBadge}><Text style={d.visitBadgeTxt}>#{doc.EnrollID || doc.enrollID || doc.intEnroll}</Text></LinearGradient>
                     <View style={{flex:1}}>
                       <Text style={d.visitName}>{doc.FullName || doc.strDoctorName}</Text>
                       <Text style={d.visitMeta}>{doc.Specialization || doc.strSpecialization} · {doc.ZoneName || doc.strZone}</Text>

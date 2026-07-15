@@ -22,12 +22,62 @@ app.get("/", (req, res) => {
   });
 });
 
+// Generic Proxy Handler to forward authentication and other external routes
+const proxyRequest = (targetBaseUrl) => {
+  return async (req, res) => {
+    try {
+      const url = `${targetBaseUrl}${req.path}`;
+      const method = req.method;
+      const headers = { ...req.headers };
+      
+      // Prevent host header from causing TLS/SSL handshake validation errors
+      delete headers.host;
+      
+      const options = {
+        method,
+        headers,
+      };
+
+      if (method !== "GET" && method !== "HEAD") {
+        options.body = JSON.stringify(req.body);
+        options.headers["content-type"] = "application/json";
+      }
+
+      if (!options.headers["accept"]) {
+        options.headers["accept"] = "application/json";
+      }
+
+      const queryStr = new URLSearchParams(req.query).toString();
+      const finalUrl = queryStr ? `${url}?${queryStr}` : url;
+
+      console.log(`[Proxy] ${method} ${req.originalUrl} -> ${finalUrl}`);
+
+      const response = await fetch(finalUrl, options);
+      const text = await response.text();
+
+      res.status(response.status);
+      const resContentType = response.headers.get("content-type");
+      if (resContentType) {
+        res.set("content-type", resContentType);
+      }
+      res.send(text);
+    } catch (err) {
+      console.error(`[Proxy Error] ${req.method} ${req.originalUrl}:`, err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  };
+};
+
+app.use("/api/auth", proxyRequest("https://arlapi.ibos.io/api/v1/auth"));
+app.use("/api/auth-farm", proxyRequest("https://arlapi.ibos.io/api/v1/auth-farm"));
+
 app.use("/api/doctors", doctorsRouter);
 app.use("/api/farms", farmsRouter);
 app.use("/api/visits", visitsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/complaints", complaintsRouter);
 app.use("/api/settings", settingsRouter);
+
 
 
 app.use((req, res) => {

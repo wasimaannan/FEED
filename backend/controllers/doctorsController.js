@@ -1,5 +1,32 @@
 const { pool } = require("../config/db");
 
+async function getAdminToken() {
+  const details = {
+    'grant_type': 'password',
+    'username': '306007',
+    'password': '@dp702UK'
+  };
+  const formBody = Object.keys(details)
+    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(details[key]))
+    .join('&');
+
+  const res = await fetch("https://arlapi.ibos.io/api/v1/auth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "accept": "application/json"
+    },
+    body: formBody
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to authenticate with external API as administrator");
+  }
+
+  const json = await res.json();
+  return json.access_token || json.token || json.Token;
+}
+
 function getApiErrorMessage(apiJson, fallback) {
   if (apiJson.detail) {
     if (typeof apiJson.detail === "string") {
@@ -11,35 +38,53 @@ function getApiErrorMessage(apiJson, fallback) {
   return apiJson.message || apiJson.error || fallback;
 }
 
-// GET all doctors
+// GET all/searched doctors from external API
 exports.getDoctors = async (req, res) => {
   try {
-    const result = await pool.request().query(`
-      SELECT
-        DoctorID,
-        EnrollID,
-        EnrollID AS intEnroll,
-        FullName,
-        FullName AS strDoctorName,
-        Specialization,
-        Specialization AS strSpecialization,
-        ZoneName,
-        ZoneName AS strZone,
-        ServiceTarget,
-        IsActive
-      FROM farm.Doctors
-      ORDER BY FullName
-    `);
+    const q = req.query.q || " ";
+    const limit = req.query.limit || 500;
+    const token = await getAdminToken();
+
+    const apiRes = await fetch(`https://arlapi.ibos.io/api/v1/doctors/search?q=${encodeURIComponent(q)}&limit=${limit}`, {
+      headers: {
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      let apiJson = {};
+      try { apiJson = JSON.parse(errText); } catch(e) { apiJson = { message: errText }; }
+      throw new Error(getApiErrorMessage(apiJson, "Failed to fetch doctors from external API"));
+    }
+
+    const doctorsList = await apiRes.json();
+
+    const mapped = doctorsList.map(d => ({
+      DoctorID: d.EnrollID,
+      EnrollID: d.EnrollID,
+      intEnroll: d.EnrollID,
+      FullName: d.FullName,
+      strDoctorName: d.FullName,
+      Specialization: d.Specialization,
+      strSpecialization: d.Specialization,
+      ZoneName: d.ZoneName,
+      strZone: d.ZoneName,
+      ActiveFarm: d.ActiveFarm,
+      UnderService: d.UnderService,
+      ServiceTarget: d.ServiceTarget,
+      IsActive: d.IsActive
+    }));
 
     res.json({
       success: true,
-      count: result.recordset.length,
-      data: result.recordset,
+      count: mapped.length,
+      data: mapped,
     });
 
   } catch (err) {
-    console.error(err);
-
+    console.error("Error fetching doctors:", err);
     res.status(500).json({
       success: false,
       error: err.message,
@@ -47,46 +92,58 @@ exports.getDoctors = async (req, res) => {
   }
 };
 
-// GET doctor by EnrollID
+// GET doctor by EnrollID from external API
 exports.getDoctorById = async (req, res) => {
   try {
     const enroll = req.params.id;
+    const token = await getAdminToken();
 
-    const result = await pool
-      .request()
-      .input("EnrollID", enroll)
-      .query(`
-        SELECT
-          DoctorID,
-          EnrollID,
-          EnrollID AS intEnroll,
-          FullName,
-          FullName AS strDoctorName,
-          Specialization,
-          Specialization AS strSpecialization,
-          ZoneName,
-          ZoneName AS strZone,
-          ServiceTarget,
-          IsActive
-        FROM farm.Doctors
-        WHERE EnrollID = @EnrollID
-      `);
+    const apiRes = await fetch(`https://arlapi.ibos.io/api/v1/doctors/${enroll}`, {
+      headers: {
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
-    if (!result.recordset.length) {
+    if (apiRes.status === 404) {
       return res.status(404).json({
         success: false,
         error: "Doctor not found",
       });
     }
 
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      let apiJson = {};
+      try { apiJson = JSON.parse(errText); } catch(e) { apiJson = { message: errText }; }
+      throw new Error(getApiErrorMessage(apiJson, "Failed to fetch doctor by id from external API"));
+    }
+
+    const d = await apiRes.json();
+
+    const mapped = {
+      DoctorID: d.EnrollID,
+      EnrollID: d.EnrollID,
+      intEnroll: d.EnrollID,
+      FullName: d.FullName,
+      strDoctorName: d.FullName,
+      Specialization: d.Specialization,
+      strSpecialization: d.Specialization,
+      ZoneName: d.ZoneName,
+      strZone: d.ZoneName,
+      ActiveFarm: d.ActiveFarm,
+      UnderService: d.UnderService,
+      ServiceTarget: d.ServiceTarget,
+      IsActive: d.IsActive
+    };
+
     res.json({
       success: true,
-      data: result.recordset[0],
+      data: mapped,
     });
 
   } catch (err) {
-    console.error(err);
-
+    console.error("Error fetching doctor by id:", err);
     res.status(500).json({
       success: false,
       error: err.message,
@@ -94,7 +151,7 @@ exports.getDoctorById = async (req, res) => {
   }
 };
 
-// CREATE doctor
+// CREATE doctor via external API
 exports.createDoctor = async (req, res) => {
   try {
     const EnrollID = Number(req.body.EnrollID || req.body.intEnroll) || 0;
@@ -107,7 +164,6 @@ exports.createDoctor = async (req, res) => {
     const IsActive = req.body.IsActive ?? true;
     const CreatedByUserID = req.body.CreatedByUserID || 0;
 
-    // Map input Specialization choice to valid external API specialization ('Poultry', 'Cattle', 'Fish')
     let apiSpecialization = Specialization;
     if (Specialization) {
       const specLower = Specialization.toLowerCase();
@@ -120,10 +176,16 @@ exports.createDoctor = async (req, res) => {
       }
     }
 
-    // Resolve ZoneID dynamically
+    // Resolve ZoneID dynamically using admin token
     let ZoneID = 0;
+    const token = await getAdminToken();
     try {
-      const zonesRes = await fetch("https://arlapi.ibos.io/api/v1/settings/zones");
+      const zonesRes = await fetch("https://arlapi.ibos.io/api/v1/settings/zones", {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (zonesRes.ok) {
         const zonesList = await zonesRes.json();
         const match = zonesList.find(z => String(z.Zone || z.ZoneName || "").toLowerCase() === String(ZoneName || "").toLowerCase());
@@ -135,7 +197,6 @@ exports.createDoctor = async (req, res) => {
       console.warn("Failed to retrieve ZoneID from settings API, using static mapping fallback", e);
     }
 
-    // Static mapping fallback if dynamic resolve failed
     if (!ZoneID && ZoneName) {
       const lower = ZoneName.toLowerCase();
       if (lower.includes("north")) ZoneID = 101;
@@ -161,7 +222,8 @@ exports.createDoctor = async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "accept": "application/json"
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -198,8 +260,7 @@ exports.createDoctor = async (req, res) => {
   }
 };
 
-
-// UPDATE doctor
+// UPDATE doctor via external API
 exports.updateDoctor = async (req, res) => {
   try {
     const enroll = req.params.id;
@@ -211,7 +272,6 @@ exports.updateDoctor = async (req, res) => {
     const ServiceTarget = req.body.ServiceTarget || req.body.intServiceTarget || 0;
     const IsActive = req.body.IsActive ?? true;
 
-    // Map input Specialization choice to valid external API specialization ('Poultry', 'Cattle', 'Fish')
     let apiSpecialization = Specialization;
     if (Specialization) {
       const specLower = Specialization.toLowerCase();
@@ -224,10 +284,16 @@ exports.updateDoctor = async (req, res) => {
       }
     }
 
-    // Resolve ZoneID dynamically
+    // Resolve ZoneID dynamically using admin token
     let ZoneID = 0;
+    const token = await getAdminToken();
     try {
-      const zonesRes = await fetch("https://arlapi.ibos.io/api/v1/settings/zones");
+      const zonesRes = await fetch("https://arlapi.ibos.io/api/v1/settings/zones", {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (zonesRes.ok) {
         const zonesList = await zonesRes.json();
         const match = zonesList.find(z => String(z.Zone || z.ZoneName || "").toLowerCase() === String(ZoneName || "").toLowerCase());
@@ -239,7 +305,6 @@ exports.updateDoctor = async (req, res) => {
       console.warn("Failed to retrieve ZoneID from settings API, using static mapping fallback", e);
     }
 
-    // Static mapping fallback if dynamic resolve failed
     if (!ZoneID && ZoneName) {
       const lower = ZoneName.toLowerCase();
       if (lower.includes("north")) ZoneID = 101;
@@ -263,7 +328,8 @@ exports.updateDoctor = async (req, res) => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "accept": "application/json"
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -300,32 +366,15 @@ exports.updateDoctor = async (req, res) => {
   }
 };
 
-
-// DELETE doctor
+// DELETE doctor (Mocked)
 exports.deleteDoctor = async (req, res) => {
   try {
-    const result = await pool.request()
-      .input("EnrollID", req.params.id)
-      .query(`
-        DELETE FROM farm.Doctors
-        WHERE EnrollID=@EnrollID
-      `);
-
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Doctor not found",
-      });
-    }
-
     res.json({
       success: true,
-      message: "Doctor deleted successfully",
+      message: "Doctor deleted successfully (Mocked)",
     });
-
   } catch (err) {
     console.error(err);
-
     res.status(500).json({
       success: false,
       error: err.message,

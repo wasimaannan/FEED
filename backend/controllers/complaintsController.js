@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const { getAdminToken } = require("../utils/externalApi");
 
 // ================= GET ALL COMPLAINTS =================
 
@@ -188,5 +189,27 @@ exports.deleteComplaint = async (req, res) => {
       error: err.message,
     });
 
+  }
+};
+
+// ================= GET ROOT CAUSES FROM EXTERNAL API =================
+
+exports.getRootCauses = async (req, res) => {
+  try {
+    const token = await getAdminToken();
+    const response = await fetch("https://arlapi.ibos.io/api/v1/complaints/root-causes", {
+      headers: {
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch root causes: ${response.statusText}`);
+    }
+    const json = await response.json();
+    res.json(json);
+  } catch (err) {
+    console.error("Error fetching root causes:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };

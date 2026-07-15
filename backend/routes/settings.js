@@ -2,9 +2,42 @@
 const express = require("express");
 const router = express.Router();
 
+async function getAdminToken() {
+  const details = {
+    'grant_type': 'password',
+    'username': '306007',
+    'password': '@dp702UK'
+  };
+  const formBody = Object.keys(details)
+    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(details[key]))
+    .join('&');
+
+  const res = await fetch("https://arlapi.ibos.io/api/v1/auth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "accept": "application/json"
+    },
+    body: formBody
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to authenticate with external API as administrator");
+  }
+
+  const json = await res.json();
+  return json.access_token || json.token || json.Token;
+}
+
 router.get("/zones", async (req, res) => {
   try {
-    const response = await fetch("https://arlapi.ibos.io/api/v1/settings/zones");
+    const token = await getAdminToken();
+    const response = await fetch("https://arlapi.ibos.io/api/v1/settings/zones", {
+      headers: {
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch zones: ${response.statusText}`);
     }
@@ -18,7 +51,13 @@ router.get("/zones", async (req, res) => {
 
 router.get("/farm-types", async (req, res) => {
   try {
-    const response = await fetch("https://arlapi.ibos.io/api/v1/settings/farm-types");
+    const token = await getAdminToken();
+    const response = await fetch("https://arlapi.ibos.io/api/v1/settings/farm-types", {
+      headers: {
+        "accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch farm types: ${response.statusText}`);
     }

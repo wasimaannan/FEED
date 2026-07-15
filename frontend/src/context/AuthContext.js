@@ -7,6 +7,7 @@ import {
   getUserProfile,
   logoutUser,
   updateUserPhone,
+  createDatabaseUser,
 } from "../api";
 
 const AuthContext = createContext(null);
@@ -66,9 +67,10 @@ export function AuthProvider({ children }) {
   const login = async (enrollId, password) => {
     try {
       const response = await loginUser({ enrollId, password });
+      const token = response.access_token || response.token || response.Token;
       
       // Fetch user profile to get full details (FullName, ZoneName, Username)
-      const profile = await getUserProfile(enrollId);
+      const profile = await getUserProfile(enrollId, token);
       
       // Create session user object
       const sessionUser = {
@@ -77,6 +79,7 @@ export function AuthProvider({ children }) {
         zoneName: profile.ZoneName || profile.zoneName || "HQ",
         username: profile.Username || profile.username || "",
         ...profile,
+        ...response, // Merge login response which contains the token
       };
 
       await SafeStorage.setItem(STORAGE_KEY, JSON.stringify(sessionUser));
@@ -97,11 +100,24 @@ export function AuthProvider({ children }) {
         zoneName,
       });
 
+      try {
+        await createDatabaseUser({
+          enrollId: Number(enrollId),
+          username,
+          fullName,
+          password,
+          zoneName,
+          phone,
+        });
+      } catch (dbErr) {
+        console.warn("Failed to create user in SSISRND database:", dbErr);
+      }
+
       if (phone) {
         try {
           await updateUserPhone({ enrollId, phone });
         } catch (e) {
-          console.warn("Failed to update user phone number locally:", e);
+          console.warn("Failed to update user phone number in SSISRND database:", e);
         }
       }
 

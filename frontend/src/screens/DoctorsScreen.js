@@ -22,12 +22,15 @@ export default function DoctorsScreen() {
   const [enroll,setEnroll]=useState("");
   const [name,setName]=useState("");
   const [spec,setSpec]=useState("");
+  const [broiler,setBroiler]=useState("");
+  const [layer,setLayer]=useState("");
+  const [sonali,setSonali]=useState("");
   const [underSvc,setUnderSvc]=useState("");
   const [svcTarget,setSvcTarget]=useState("");
 
   const [zonesList, setZonesList] = useState(ZONES);
   const [rawZones, setRawZones] = useState([]);
-  const [specializationsList, setSpecializationsList] = useState(["Broiler", "Layer", "Cattle", "Sonali"]);
+  const [specializationsList, setSpecializationsList] = useState(["Broiler", "Layer", "Sonali", "Cattle", "Fish"]);
 
   useEffect(() => {
     async function loadSettings() {
@@ -45,7 +48,7 @@ export default function DoctorsScreen() {
     loadSettings();
   }, []);
 
-  const clearForm = useCallback(()=>{ setSearchId("");setZone("");setEnroll("");setName("");setSpec("");setUnderSvc("");setSvcTarget("");setShowOverwrite(false);setBadge("new"); },[]);
+  const clearForm = useCallback(()=>{ setSearchId("");setZone("");setEnroll("");setName("");setSpec("");setBroiler("");setLayer("");setSonali("");setUnderSvc("");setSvcTarget("");setShowOverwrite(false);setBadge("new"); },[]);
 
   const checkEnroll = useCallback(async v=>{
     setEnroll(v);
@@ -69,8 +72,11 @@ export default function DoctorsScreen() {
       setName(row.FullName || "");
       setSpec(row.Specialization || "");
 
-      // These columns don't exist yet in SQL
-      setUnderSvc("");
+      // Mapping numeric fields
+      setBroiler(""); // Default to empty as these are summary fields
+      setLayer("");
+      setSonali("");
+      setUnderSvc(String(row.UnderService || ""));
       setSvcTarget(String(row.ServiceTarget || ""));
 
       setBadge("edit");
@@ -97,6 +103,9 @@ export default function DoctorsScreen() {
         strZone:zone,
         ZoneID: zoneId,
         strSpecialization:spec,
+        intBroiler:Number(broiler)||0,
+        intLayer:Number(layer)||0,
+        intSonali:Number(sonali)||0,
         intUnderService:Number(underSvc)||0,
         intServiceTarget:Number(svcTarget)||0,
         CreatedByUserID: user ? user.enrollId : 0
@@ -104,7 +113,7 @@ export default function DoctorsScreen() {
       setBadge("ok"); toastRef.current?.show(mode==="new"?"Doctor added!":"Doctor updated!","ok");
     } catch(e){toastRef.current?.show(e.message,"err");}
     finally{setSaving(false);}
-  },[zone,enroll,name,spec,underSvc,svcTarget,mode,user,rawZones]);
+  },[zone,enroll,name,spec,broiler,layer,sonali,underSvc,svcTarget,mode,user,rawZones]);
 
   return (
     <KeyboardAvoidingView style={S.screen} behavior={Platform.OS==="ios"?"padding":undefined}>
@@ -132,6 +141,11 @@ export default function DoctorsScreen() {
 
               <FadeIn delay={160}>
                 <SectionDivider label="Farm Coverage"/>
+                <View style={S.grid3}>
+                  <FormField label="Broiler" value={broiler} onChangeText={setBroiler} keyboardType="numeric" placeholder="0" style={{flex:1}}/>
+                  <FormField label="Layer"   value={layer}   onChangeText={setLayer}   keyboardType="numeric" placeholder="0" style={{flex:1}}/>
+                  <FormField label="Sonali"  value={sonali}  onChangeText={setSonali}  keyboardType="numeric" placeholder="0" style={{flex:1}}/>
+                </View>
                 <View style={S.grid2}>
                   <FormField label="Under Service" value={underSvc}  onChangeText={setUnderSvc}  keyboardType="numeric" placeholder="0" style={{flex:1}}/>
                   <FormField label="Svc Target"    value={svcTarget} onChangeText={setSvcTarget} keyboardType="numeric" placeholder="0" style={{flex:1}}/>

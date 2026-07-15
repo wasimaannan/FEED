@@ -14,6 +14,7 @@ import {
 } from "../components";
 import { useAuth } from "../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import { saveComplaint, getComplaintRootCauses } from "../api";
 
 // ── 5-Level Complaint Hierarchy (inline) ────────────────────────
 const COMPLAINT_HIERARCHY = {
@@ -95,6 +96,8 @@ export default function ComplaintScreen() {
 
   const [saving,      setSaving]      = useState(false);
   const [openList,    setOpenList]    = useState([]);
+  const [resolvedList,setResolvedList]= useState([]);
+  const [viewMode,    setViewMode]    = useState("open"); // "open" or "resolved"
   const [loadingList, setLoadingList] = useState(true);
 
   const [farmType,    setFarmType]    = useState("");
@@ -104,6 +107,25 @@ export default function ComplaintScreen() {
   const [rootCause,   setRootCause]   = useState("");
   const [description, setDescription] = useState("");
   const [reportedDate,setReportedDate]= useState(todayStr());
+  const [rootCausesList, setRootCausesList] = useState(ROOT_CAUSE_LIBRARY);
+
+  const [resID, setResID] = useState(null);
+  const [resReason, setResReason] = useState("");
+
+  useEffect(() => {
+    async function loadRootCauses() {
+      try {
+        const rc = await getComplaintRootCauses();
+        if (rc && Array.isArray(rc)) {
+          const mapped = Array.from(new Set(rc.map(item => item.RootCause).filter(Boolean)));
+          if (mapped.length > 0) setRootCausesList(mapped);
+        }
+      } catch (e) {
+        console.warn("Failed to load root causes from API, using fallback:", e);
+      }
+    }
+    loadRootCauses();
+  }, []);
 
   const segments    = useMemo(() => getSegments(farmType), [farmType]);
   const categories  = useMemo(() => getCategories(farmType), [farmType]);
@@ -118,7 +140,9 @@ export default function ComplaintScreen() {
     if (!user?.enrollId) return;
     setLoadingList(true);
     const all = await loadAllComplaints();
-    setOpenList(all.filter(c => String(c.intEnroll) === String(user.enrollId) && !c.dtResolved));
+    const userComplaints = all.filter(c => String(c.intEnroll) === String(user.enrollId));
+    setOpenList(userComplaints.filter(c => !c.dtResolved));
+    setResolvedList(userComplaints.filter(c => !!c.dtResolved));
     setLoadingList(false);
   }, [user]);
 
@@ -145,6 +169,13 @@ export default function ComplaintScreen() {
         dtReported: reportedDate,
         dtResolved: null,
       };
+
+      // Submit to the external API
+      await saveComplaint({
+        ...newEntry,
+        strZoneName: user.zoneName || "HQ",
+      });
+
       await saveAllComplaints([newEntry, ...all]);
       toastRef.current?.show("Complaint registered", "ok");
       resetForm();
@@ -156,17 +187,27 @@ export default function ComplaintScreen() {
     }
   }, [user, farmType, segment, category, complaint, rootCause, description, reportedDate, resetForm, refreshOpenList]);
 
-  const handleResolve = useCallback(async (id) => {
+  const handleResolve = useCallback(async () => {
+    if (!resReason.trim()) {
+      toastRef.current?.show("Please provide a resolution reason", "err");
+      return;
+    }
     try {
       const all = await loadAllComplaints();
-      const updated = all.map(c => c.id === id ? { ...c, dtResolved: todayStr() } : c);
+      const updated = all.map(c => c.id === resID ? {
+        ...c,
+        dtResolved: todayStr(),
+        resolution: resReason.trim()
+      } : c);
       await saveAllComplaints(updated);
-      toastRef.current?.show("Marked resolved", "ok");
+      toastRef.current?.show("Complaint resolved", "ok");
+      setResID(null);
+      setResReason("");
       await refreshOpenList();
     } catch (e) {
       toastRef.current?.show(e.message || "Could not resolve", "err");
     }
-  }, [refreshOpenList]);
+  }, [refreshOpenList, resID, resReason]);
 
   const insets2 = useSafeAreaInsets();
   return (
@@ -182,32 +223,63 @@ export default function ComplaintScreen() {
 
       <ScrollView contentContainerStyle={[S.scroll, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <FadeIn>
-          {openList.length > 0 && (
-            <>
-              <SectionDivider label={`Open Complaints (${openList.length})`} />
-              {openList.map((c) => (
-                <View key={c.id} style={cs.complaintCard}>
-                  <View style={{ flex: 1 }}>
-                    <View style={cs.breadcrumbRow}>
-                      <Text style={cs.breadcrumb}>{c.strFarmType}</Text>
-                      {c.strSegment ? <Text style={cs.breadcrumbSep}>›</Text> : null}
-                      {c.strSegment ? <Text style={cs.breadcrumb}>{c.strSegment}</Text> : null}
-                      <Text style={cs.breadcrumbSep}>›</Text>
-                      <Text style={cs.breadcrumb}>{c.strCategory}</Text>
-                    </View>
-                    <Text style={cs.complaintTitle}>{c.strComplaint}</Text>
-                    {c.strRootCause ? <Text style={cs.rootCause}>Root cause: {c.strRootCause}</Text> : null}
-                    <Text style={cs.reportedDate}>Reported {c.dtReported}</Text>
-                  </View>
-                  <TouchableOpacity style={cs.resolveBtn} onPress={() => handleResolve(c.id)}>
-                    <Text style={cs.resolveBtnText}>Mark resolved</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </>
-          )}
+          <View style={S.modeRow}>
+            <TouchableOpacity style={[S.modeBtn, viewMode === "open" && S.modeBtnOn]} onPress={() => setViewMode("open")}>
+              <Text style={[S.modeBtnText, viewMode === "open" && S.modeBtnTextOn]}>Open ({openList.length})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[S.modeBtn, viewMode === "resolved" && S.modeBtnOn]} onPress={() => setViewMode("resolved")}>
+              <Text style={[S.modeBtnText, viewMode === "resolved" && S.modeBtnTextOn]}>Resolved ({resolvedList.length})</Text>
+            </TouchableOpacity>
+          </View>
 
-          <SectionDivider label="Register New Complaint" />
+          {viewMode === "open" ? (
+            <>
+              {openList.length > 0 && (
+                <>
+                  <SectionDivider label={`Pending Resolution`} />
+                  {openList.map((c) => (
+                    <View key={c.id} style={cs.complaintCard}>
+                      <View style={{ flex: 1 }}>
+                        <View style={cs.breadcrumbRow}>
+                          <Text style={cs.breadcrumb}>{c.strFarmType}</Text>
+                          {c.strSegment ? <Text style={cs.breadcrumbSep}>›</Text> : null}
+                          {c.strSegment ? <Text style={cs.breadcrumb}>{c.strSegment}</Text> : null}
+                          <Text style={cs.breadcrumbSep}>›</Text>
+                          <Text style={cs.breadcrumb}>{c.strCategory}</Text>
+                        </View>
+                        <Text style={cs.complaintTitle}>{c.strComplaint}</Text>
+                        {c.strRootCause ? <Text style={cs.rootCause}>Root cause: {c.strRootCause}</Text> : null}
+                        <Text style={cs.reportedDate}>Reported {c.dtReported}</Text>
+
+                        {resID === c.id && (
+                          <FadeIn style={{ marginTop: 12 }}>
+                            <FormField
+                              label="Resolution Details"
+                              value={resReason}
+                              onChangeText={setResReason}
+                              placeholder="Describe how it was resolved..."
+                              multiline
+                              required
+                            />
+                            <View style={S.btnRow}>
+                              <GhostBtn label="Cancel" onPress={() => { setResID(null); setResReason(""); }} />
+                              <PrimaryBtn label="Submit Resolution" onPress={handleResolve} />
+                            </View>
+                          </FadeIn>
+                        )}
+                      </View>
+                      {!resID && (
+                        <TouchableOpacity style={cs.resolveBtn} onPress={() => setResID(c.id)}>
+                          <Text style={cs.resolveBtnText}>Resolve</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))}
+                </>
+              )}
+
+              <SectionDivider label="Register New Complaint" />
+              {/* Existing form fields... */}
 
           <TagLabel text="Step 1 · Farm Type" />
           <PillGroup
@@ -248,7 +320,7 @@ export default function ComplaintScreen() {
               label="Root Cause (optional)"
               value={rootCause}
               onValueChange={setRootCause}
-              items={ROOT_CAUSE_LIBRARY}
+              items={rootCausesList}
             />
           ) : null}
 
@@ -273,6 +345,29 @@ export default function ComplaintScreen() {
             <GhostBtn label="Reset form" onPress={resetForm} />
             <PrimaryBtn label="Register complaint" onPress={handleSubmit} loading={saving} disabled={!farmType || !category || !complaint} />
           </View>
+        </>
+      ) : (
+        <>
+              <SectionDivider label="Resolution History" />
+              {resolvedList.length === 0 ? (
+                <EmptyState icon={<Ionicons name="checkmark-circle-outline" size={32} color={colors.textTer} />} title="No resolved complaints" sub="Completed issues will appear here" />
+              ) : (
+                resolvedList.map((c) => (
+                  <View key={c.id} style={[cs.complaintCard, { borderColor: colors.successBorder, borderLeftColor: colors.success }]}>
+                    <View style={cs.breadcrumbRow}>
+                      <Text style={cs.breadcrumb}>{c.strFarmType} › {c.strCategory}</Text>
+                    </View>
+                    <Text style={cs.complaintTitle}>{c.strComplaint}</Text>
+                    <View style={cs.resBox}>
+                      <Text style={cs.resLabel}>Resolution:</Text>
+                      <Text style={cs.resText}>{c.resolution}</Text>
+                    </View>
+                    <Text style={cs.reportedDate}>Resolved on {c.dtResolved}</Text>
+                  </View>
+                ))
+              )}
+            </>
+          )}
         </FadeIn>
       </ScrollView>
 
@@ -291,4 +386,7 @@ const cs = StyleSheet.create({
   reportedDate:  { fontSize: 11, color: colors.textTer, marginTop: 6, fontFamily: "monospace" },
   resolveBtn:    { marginTop: 10, alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.successBg, borderWidth: 1, borderColor: colors.successBorder },
   resolveBtnText:{ fontSize: 12, fontWeight: "700", color: colors.success },
+  resBox:        { backgroundColor: colors.surfaceUp, borderRadius: 10, padding: 10, marginTop: 10, borderLeftWidth: 3, borderLeftColor: colors.success },
+  resLabel:      { fontSize: 10, fontWeight: "800", color: colors.textSec, textTransform: "uppercase", marginBottom: 3 },
+  resText:       { fontSize: 13, color: colors.textPrimary, lineHeight: 18 },
 });
