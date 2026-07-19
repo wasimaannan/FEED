@@ -412,39 +412,212 @@ export async function saveVisit(data) {
 // ===================== COMPLAINTS =====================
 
 export async function getAllComplaints() {
-  try {
-    const res = await authRequest("/list", { prefix: "/complaints", method: "GET" });
-    return res.data || res.payload || (Array.isArray(res) ? res : []);
-  } catch (e) {
-    return [];
+  const endpoints = ["/all", "/list", "/search?q=%25&limit=1000", ""];
+  console.log("API: getAllComplaints starting search across endpoints (preferring /all)...");
+
+  let combinedData = [];
+  const seenIds = new Set();
+
+  for (const ep of endpoints) {
+    try {
+      const res = await adminAuthRequest(ep, { prefix: "/complaints", method: "GET" });
+      if (!res) continue;
+
+      const list = res.data || res.Data || res.payload || res.Payload || res.complaints || res.Complaints || (Array.isArray(res) ? res : null);
+
+      if (list && Array.isArray(list)) {
+        console.log(`API: getAllComplaints found ${list.length} records on ${ep || 'base'}`);
+        list.forEach(item => {
+          const id = item.intAutoID || item.ComplaintID || item.id || Math.random();
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            combinedData.push(item);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn(`API: getAllComplaints for ${ep || 'base'} failed:`, e.message);
+    }
   }
+
+  // Also try explicitly fetching resolved ones if there's a pattern
+  const filterEndpoints = ["/all?IsActive=0", "/all?Status=Resolved", "/all?IsActive=false"];
+  for (const fep of filterEndpoints) {
+    try {
+      const res = await adminAuthRequest(fep, { prefix: "/complaints", method: "GET" });
+      const list = res.data || res.Data || res.payload || res.Payload || res.complaints || res.Complaints || (Array.isArray(res) ? res : null);
+      if (list && Array.isArray(list)) {
+        console.log(`API: getAllComplaints found ${list.length} records on filter ${fep}`);
+        list.forEach(item => {
+          const id = item.intAutoID || item.ComplaintID || item.id || Math.random();
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            combinedData.push(item);
+          }
+        });
+      }
+    } catch (e) {}
+  }
+
+  if (combinedData.length > 0) {
+    console.log("API: getAllComplaints total combined count:", combinedData.length);
+    const resolvedCount = combinedData.filter(c =>
+      c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' ||
+      String(c.IsActive).toLowerCase() === 'false' ||
+      c.Status === "Resolved" || (c.Resolution && c.Resolution !== "")
+    ).length;
+    console.log("API: Combined list contains", resolvedCount, "resolved items");
+    return combinedData;
+  }
+
+  console.warn("API: getAllComplaints failed on all known endpoints.");
+  return [];
 }
 
 export async function getComplaintRootCauses() {
-  return await authRequest("/root-causes", { prefix: "/complaints", method: "GET" });
+  return await adminAuthRequest("/root-causes", { prefix: "/complaints", method: "GET" });
 }
 
 export async function saveComplaint(data) {
   const payload = {
-    ComplaintID: data.id || `COMP${Date.now()}`,
     ComplaintDate: data.dtReported || new Date().toISOString().split("T")[0],
     DoctorID: Number(data.intEnroll),
+    DoctorName: data.strDoctorName || "",
     ZoneName: data.strZoneName || null,
     FarmTypeName: data.strFarmType || null,
+    FarmID: Number(data.FarmID || 0),
+    ComplaintSegment: data.strSegment || null,
     ComplaintType: data.strCategory || null,
+    Category: data.strCategory || null,
     ComplaintName: data.strComplaint || null,
+    Subject: data.strComplaint || null,
     RootCause: data.strRootCause || null,
     ComplaintDescription: data.strDescription || null,
+    Description: data.strDescription || null,
     OpenDate: data.dtReported ? `${data.dtReported}T00:00:00` : new Date().toISOString(),
-    IsActive: true,
+    IsActive: 1,
+    Is_Active: 1,
     CreatedBy: Number(data.intEnroll),
+    RaisedByUserID: Number(data.intEnroll),
+    RaisedByName: data.strDoctorName || "",
+    Status: "Open",
+    Priority: "Medium"
   };
 
-  return await authRequest("/create", {
-    prefix: "/complaints",
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  console.log("API: saveComplaint payload:", payload);
+
+  try {
+    // Try base endpoint first (like visits)
+    return await adminAuthRequest("", {
+      prefix: "/complaints",
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    console.warn("API: saveComplaint base failed, trying /create:", e);
+    return await adminAuthRequest("/create", {
+      prefix: "/complaints",
+      method: "POST",
+      body: JSON.stringify({ ...payload, ComplaintID: data.id || `COMP${Date.now()}` }),
+    });
+  }
+}
+
+export async function updateComplaint(id, data) {
+  // Map resolution to 'Resolution' (capitalized) and set IsActive to 0 (resolved)
+  // Some APIs use 'Resolution' while others use 'resolve'
+  const payload = {
+    ...data,
+    Status: "Resolved", // Add explicit status update
+    IsActive: 0,        // Ensure it's numeric 0
+    Is_Active: 0,
+  };
+
+  if (data.resolution !== undefined) {
+    payload.Resolution = data.resolution;
+    payload.resolve = data.resolution;
+    delete payload.resolution;
+  }
+
+  console.log(`API: updateComplaint starting for ID ${id}...`);
+
+  try {
+    // 1. First, fetch ALL complaints to find the record and its correct primary key
+    const all = await getAllComplaints();
+    const found = all.find(c => c.ComplaintID === id || c.id === id || String(c.ComplaintID).includes(String(id).replace(/^\D+/g, '')));
+
+    if (!found) {
+      console.warn("API: Could not find complaint in the list to identify its primary key.");
+    } else {
+      console.log("API: Found complaint record for update:", found);
+
+      // 2. Try every potential ID field found in the record
+      // The error "Input should be a valid integer" suggests it wants a numeric primary key
+      const keysToTry = [];
+      // Prioritize intAutoID based on user logs
+      const internalIds = [found.intAutoID, found.auto_id, found.id, found.StatusID, found.ComplaintID]
+        .filter(v => v !== undefined && v !== null && !isNaN(v));
+
+      for (const nid of internalIds) {
+        keysToTry.push(`/update/${nid}`);
+        keysToTry.push(`/edit/${nid}`);
+        keysToTry.push(`/${nid}`);
+      }
+
+      console.log("API: Update paths to try based on record:", keysToTry);
+
+      for (const endpoint of keysToTry) {
+        try {
+          // Try both PUT and PATCH as some APIs are picky
+          for (const method of ["PUT", "PATCH"]) {
+            try {
+              const res = await adminAuthRequest(endpoint, {
+                prefix: "/complaints",
+                method,
+                body: JSON.stringify({ ...payload, intAutoID: found.intAutoID, ComplaintID: found.ComplaintID }),
+              });
+              console.log(`API: updateComplaint success using ${method} at ${endpoint}`);
+              return res;
+            } catch (innerErr) {
+              if (method === "PATCH") throw innerErr;
+            }
+          }
+        } catch (e) {
+          console.warn(`API: updateComplaint failed at ${endpoint}:`, e.message);
+        }
+      }
+
+      // 3. Try sending ID in body to a generic update endpoint
+      try {
+        const res = await adminAuthRequest("/update", {
+          prefix: "/complaints",
+          method: "POST",
+          body: JSON.stringify({ ...payload, intAutoID: found.intAutoID, ComplaintID: found.ComplaintID }),
+        });
+        console.log("API: updateComplaint success using POST to /update");
+        return res;
+      } catch (e) {}
+    }
+
+    // 4. Last resort fallbacks with the original ID
+    const fallbacks = [`/update/${id}`, `/edit/${id}`, `/${id}`];
+    for (const fb of fallbacks) {
+      try {
+        const res = await adminAuthRequest(fb, {
+          prefix: "/complaints",
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        console.log(`API: updateComplaint success on fallback ${fb}`);
+        return res;
+      } catch (err) {}
+    }
+
+    throw new Error(`Server did not recognize complaint ID: ${id}. Verified intAutoID was ${found?.intAutoID}.`);
+  } catch (globalErr) {
+    console.error("API: updateComplaint terminal failure:", globalErr.message);
+    throw globalErr;
+  }
 }
 
 // ===================== AUTH =====================

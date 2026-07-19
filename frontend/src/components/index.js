@@ -37,7 +37,7 @@ function usePress(to=0.96) {
 }
 
 // ── Header ───────────────────────────────────────────────────────
-const SUNSET_HEADER = ["#FF6B6B", "#C2386E", "#5B2A86"];
+const SUNSET_HEADER = ["#4A1209", "#7A2415", "#B85A2A"];
 
 export function ScreenHeader({ title, sub, icon, badge }) {
   const insets = useSafeAreaInsets();
@@ -179,7 +179,7 @@ const pk = StyleSheet.create({
   trigger:    { backgroundColor:colors.surfaceUp, borderWidth:1.5, borderColor:colors.borderMid, borderRadius:12, paddingHorizontal:14, paddingVertical:13, flexDirection:"row", alignItems:"center", justifyContent:"space-between", minHeight:50 },
   triggerTxt: { fontFamily:fonts.body, fontSize:15, color:colors.textPrimary, flex:1, marginRight:8 },
   chevBox:    { width:26, height:26, borderRadius:8, backgroundColor:colors.surfaceHigh, borderWidth:1.5, borderColor:colors.borderStrong, alignItems:"center", justifyContent:"center" },
-  chev:       { color:colors.brand, fontSize:18, fontWeight:"300", lineHeight:22, transform:[{rotate:"90deg"}] },
+  chev:       { color:"#7A2415", fontSize:18, fontWeight:"300", lineHeight:22, transform:[{rotate:"90deg"}] },
   sheet:      { backgroundColor:colors.surface, borderTopLeftRadius:24, borderTopRightRadius:24, borderTopWidth:1, borderColor:colors.border, paddingHorizontal:20, paddingBottom:36, shadowColor:"#000", shadowOpacity:0.12, shadowRadius:20, shadowOffset:{width:0,height:-4} },
   sheetTop:   { alignItems:"center", paddingTop:12, paddingBottom:2 },
   handle:     { width:36, height:4, borderRadius:2, backgroundColor:colors.borderMid },
@@ -187,13 +187,13 @@ const pk = StyleSheet.create({
   sheetTitle: { fontFamily:fonts.display, fontSize:18, fontWeight:"700", color:colors.textPrimary, flex:1 },
   closeBtn:   { width:32, height:32, borderRadius:16, backgroundColor:colors.surfaceUp, borderWidth:1, borderColor:colors.border, alignItems:"center", justifyContent:"center" },
   closeTxt:   { color:colors.textSec, fontSize:13, fontWeight:"700" },
-  divider:    { height:2, backgroundColor:colors.brand, marginBottom:6, borderRadius:2, opacity:0.3 },
+  divider:    { height:2, backgroundColor:"#4A1209", marginBottom:6, borderRadius:2, opacity:0.3 },
   opt:        { flexDirection:"row", alignItems:"center", paddingVertical:15, paddingHorizontal:4, borderBottomWidth:1, borderBottomColor:colors.border },
   optSel:     { backgroundColor:"rgba(15,84,50,0.07)", borderRadius:11, paddingHorizontal:10, borderBottomColor:"transparent", marginBottom:2 },
-  optBar:     { width:3, height:20, borderRadius:2, backgroundColor:colors.brand, marginRight:12 },
+  optBar:     { width:3, height:20, borderRadius:2, backgroundColor:"#4A1209", marginRight:12 },
   optTxt:     { fontFamily:fonts.body, fontSize:16, color:colors.textSec, fontWeight:"500", flex:1 },
-  optTxtSel:  { color:colors.brand, fontWeight:"700" },
-  check:      { width:28, height:28, borderRadius:14, backgroundColor:colors.brand, alignItems:"center", justifyContent:"center" },
+  optTxtSel:  { color:"#7A2415", fontWeight:"700" },
+  check:      { width:28, height:28, borderRadius:14, backgroundColor:"#4A1209", alignItems:"center", justifyContent:"center" },
   checkTxt:   { color:"#fff", fontSize:13, fontWeight:"800" },
 });
 
@@ -385,7 +385,7 @@ export const Toast = React.forwardRef((_,ref)=>{
   }));
   if (!visible) return null;
   const cfg={
-    ok:  {icon:"✓", tc:"#1A9C5C", label:"Success"},
+    ok:  {icon:"✓", tc:"#2A5C1A", label:"Success"},
     warn:{icon:"⚠", tc:"#F2542D", label:"Warning"},
     err: {icon:"✕", tc:"#D6336C", label:"Failed"},
   }[type]||{icon:"●",tc:"#1F1320",label:""};

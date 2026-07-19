@@ -5,7 +5,6 @@ import {
   TouchableOpacity, StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, S } from "../theme";
 import {
   FadeIn, ScreenHeader, TagLabel, FormField,
@@ -14,7 +13,7 @@ import {
 } from "../components";
 import { useAuth } from "../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-import { saveComplaint, getComplaintRootCauses } from "../api";
+import { saveComplaint, getComplaintRootCauses, getAllComplaints, updateComplaint } from "../api";
 
 // ── 5-Level Complaint Hierarchy (inline) ────────────────────────
 const COMPLAINT_HIERARCHY = {
@@ -77,17 +76,8 @@ const getSegments   = (ft) => COMPLAINT_HIERARCHY[ft]?.segments || null;
 const getCategories = (ft) => Object.keys(COMPLAINT_HIERARCHY[ft]?.categories || {});
 const getComplaints = (ft, cat) => COMPLAINT_HIERARCHY[ft]?.categories?.[cat] || [];
 
-// ── Local storage (no backend) ──────────────────────────────────
-const STORAGE_KEY = "feed_complaints_v1";
+// ── Form Helpers ──────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split("T")[0];
-
-async function loadAllComplaints() {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-async function saveAllComplaints(list) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
 
 export default function ComplaintScreen() {
   const insets   = useSafeAreaInsets();
@@ -139,11 +129,51 @@ export default function ComplaintScreen() {
   const refreshOpenList = useCallback(async () => {
     if (!user?.enrollId) return;
     setLoadingList(true);
-    const all = await loadAllComplaints();
-    const userComplaints = all.filter(c => String(c.intEnroll) === String(user.enrollId));
-    setOpenList(userComplaints.filter(c => !c.dtResolved));
-    setResolvedList(userComplaints.filter(c => !!c.dtResolved));
-    setLoadingList(false);
+    try {
+      const all = await getAllComplaints();
+      console.log("ComplaintScreen: Fetched total", all.length, "complaints");
+
+      // Restore user filtering but with safer checks
+      const userComplaints = all.filter(c => {
+        const creatorId = String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "");
+        return creatorId === String(user.enrollId) || !user.enrollId;
+      });
+
+      console.log(`ComplaintScreen: After filtering for user ${user.enrollId}, kept ${userComplaints.length} of ${all.length}`);
+
+      const resolved = userComplaints.filter(c => {
+        // Resolved if explicitly false, 0, or '0' OR if status is Resolved OR if there is a Resolution
+        const isRes = c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' ||
+                      String(c.IsActive).toLowerCase() === 'false' ||
+                      c.Status === "Resolved" || (c.Resolution && c.Resolution !== "");
+        return isRes;
+      });
+
+      const open = userComplaints.filter(c => {
+        // Active if not resolved
+        const isRes = c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' ||
+                      String(c.IsActive).toLowerCase() === 'false' ||
+                      c.Status === "Resolved" || (c.Resolution && c.Resolution !== "");
+        return !isRes;
+      });
+
+      console.log(`ComplaintScreen: Split into ${open.length} Open and ${resolved.length} Resolved`);
+      if (resolved.length > 0) console.log("ComplaintScreen: Sample resolved object:", resolved[0]);
+
+      // Sort newest first
+      const sortByDate = (a, b) => {
+        const dateA = new Date(a.ComplaintDate || a.dtReported || a.CreatedAt || a.OpenDate || 0);
+        const dateB = new Date(b.ComplaintDate || b.dtReported || b.CreatedAt || b.OpenDate || 0);
+        return dateB - dateA;
+      };
+
+      setOpenList(open.sort(sortByDate));
+      setResolvedList(resolved.sort(sortByDate));
+    } catch (e) {
+      console.warn("ComplaintScreen: Failed to refresh list:", e);
+    } finally {
+      setLoadingList(false);
+    }
   }, [user]);
 
   useEffect(() => { refreshOpenList(); }, [refreshOpenList]);
@@ -155,9 +185,7 @@ export default function ComplaintScreen() {
     }
     setSaving(true);
     try {
-      const all = await loadAllComplaints();
-      const newEntry = {
-        id: `c_${Date.now()}`,
+      console.log("ComplaintScreen: Submitting payload:", {
         intEnroll: user.enrollId,
         strDoctorName: user.fullName || "",
         strFarmType: farmType,
@@ -167,16 +195,25 @@ export default function ComplaintScreen() {
         strRootCause: rootCause || null,
         strDescription: description || null,
         dtReported: reportedDate,
-        dtResolved: null,
-      };
-
-      // Submit to the external API
-      await saveComplaint({
-        ...newEntry,
         strZoneName: user.zoneName || "HQ",
       });
 
-      await saveAllComplaints([newEntry, ...all]);
+      // Submit to the external API
+      const result = await saveComplaint({
+        intEnroll: user.enrollId,
+        strDoctorName: user.fullName || "",
+        strFarmType: farmType,
+        strSegment: segment || null,
+        strCategory: category,
+        strComplaint: complaint,
+        strRootCause: rootCause || null,
+        strDescription: description || null,
+        dtReported: reportedDate,
+        strZoneName: user.zoneName || "HQ",
+      });
+
+      console.log("ComplaintScreen: Save result:", result);
+
       toastRef.current?.show("Complaint registered", "ok");
       resetForm();
       await refreshOpenList();
@@ -193,13 +230,11 @@ export default function ComplaintScreen() {
       return;
     }
     try {
-      const all = await loadAllComplaints();
-      const updated = all.map(c => c.id === resID ? {
-        ...c,
-        dtResolved: todayStr(),
+      // 0 means resolved, reason goes into 'resolve' column (mapped in API)
+      await updateComplaint(resID, {
+        IsActive: 0,
         resolution: resReason.trim()
-      } : c);
-      await saveAllComplaints(updated);
+      });
       toastRef.current?.show("Complaint resolved", "ok");
       setResID(null);
       setResReason("");
@@ -238,20 +273,20 @@ export default function ComplaintScreen() {
                 <>
                   <SectionDivider label={`Pending Resolution`} />
                   {openList.map((c) => (
-                    <View key={c.id} style={cs.complaintCard}>
+                    <View key={c.ComplaintID || c.id || Math.random()} style={cs.complaintCard}>
                       <View style={{ flex: 1 }}>
                         <View style={cs.breadcrumbRow}>
-                          <Text style={cs.breadcrumb}>{c.strFarmType}</Text>
-                          {c.strSegment ? <Text style={cs.breadcrumbSep}>›</Text> : null}
-                          {c.strSegment ? <Text style={cs.breadcrumb}>{c.strSegment}</Text> : null}
+                          <Text style={cs.breadcrumb}>{c.FarmTypeName}</Text>
+                          {c.ComplaintSegment ? <Text style={cs.breadcrumbSep}>›</Text> : null}
+                          {c.ComplaintSegment ? <Text style={cs.breadcrumb}>{c.ComplaintSegment}</Text> : null}
                           <Text style={cs.breadcrumbSep}>›</Text>
-                          <Text style={cs.breadcrumb}>{c.strCategory}</Text>
+                          <Text style={cs.breadcrumb}>{c.ComplaintType}</Text>
                         </View>
-                        <Text style={cs.complaintTitle}>{c.strComplaint}</Text>
-                        {c.strRootCause ? <Text style={cs.rootCause}>Root cause: {c.strRootCause}</Text> : null}
-                        <Text style={cs.reportedDate}>Reported {c.dtReported}</Text>
+                        <Text style={cs.complaintTitle}>{c.ComplaintName || c.strComplaint || "No Title"}</Text>
+                        {c.RootCause ? <Text style={cs.rootCause}>Root cause: {c.RootCause}</Text> : null}
+                        <Text style={cs.reportedDate}>Reported {c.ComplaintDate ? c.ComplaintDate.split('T')[0] : (c.dtReported || "N/A")}</Text>
 
-                        {resID === c.id && (
+                        {resID === c.ComplaintID && (
                           <FadeIn style={{ marginTop: 12 }}>
                             <FormField
                               label="Resolution Details"
@@ -269,7 +304,7 @@ export default function ComplaintScreen() {
                         )}
                       </View>
                       {!resID && (
-                        <TouchableOpacity style={cs.resolveBtn} onPress={() => setResID(c.id)}>
+                        <TouchableOpacity style={cs.resolveBtn} onPress={() => setResID(c.ComplaintID)}>
                           <Text style={cs.resolveBtnText}>Resolve</Text>
                         </TouchableOpacity>
                       )}
@@ -353,16 +388,28 @@ export default function ComplaintScreen() {
                 <EmptyState icon={<Ionicons name="checkmark-circle-outline" size={32} color={colors.textTer} />} title="No resolved complaints" sub="Completed issues will appear here" />
               ) : (
                 resolvedList.map((c) => (
-                  <View key={c.id} style={[cs.complaintCard, { borderColor: colors.successBorder, borderLeftColor: colors.success }]}>
+                  <View key={c.ComplaintID || c.id || Math.random()} style={[cs.complaintCard, { borderColor: colors.successBorder, borderLeftColor: colors.success }]}>
                     <View style={cs.breadcrumbRow}>
-                      <Text style={cs.breadcrumb}>{c.strFarmType} › {c.strCategory}</Text>
+                      <Text style={cs.breadcrumb}>{c.FarmTypeName}{c.ComplaintSegment ? ` › ${c.ComplaintSegment}` : ""} › {c.ComplaintType}</Text>
                     </View>
-                    <Text style={cs.complaintTitle}>{c.strComplaint}</Text>
+                    <Text style={cs.complaintTitle}>{c.ComplaintName || c.strComplaint || c.Subject || "No Title"}</Text>
+
+                    {/* Display Description - check all possible backend keys */}
+                    {(c.ComplaintDescription || c.Description || c.strDescription || c.Subject) ? (
+                      <View style={cs.descBox}>
+                        <Text style={cs.resLabel}>Problem Description:</Text>
+                        <Text style={cs.descText}>{c.ComplaintDescription || c.Description || c.strDescription || c.Subject}</Text>
+                      </View>
+                    ) : null}
+
+                    {/* Display Resolution */}
                     <View style={cs.resBox}>
-                      <Text style={cs.resLabel}>Resolution:</Text>
-                      <Text style={cs.resText}>{c.resolution}</Text>
+                      <Text style={cs.resLabel}>Resolution / Actions taken:</Text>
+                      <Text style={cs.resText}>{c.Resolution || c.resolve || "Issue resolved successfully"}</Text>
                     </View>
-                    <Text style={cs.reportedDate}>Resolved on {c.dtResolved}</Text>
+                    <Text style={cs.reportedDate}>
+                      Resolved on: {c.CloseDate ? c.CloseDate.split('T')[0] : (c.UpdatedDate ? c.UpdatedDate.split('T')[0] : "Recently")}
+                    </Text>
                   </View>
                 ))
               )}
@@ -387,6 +434,8 @@ const cs = StyleSheet.create({
   resolveBtn:    { marginTop: 10, alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.successBg, borderWidth: 1, borderColor: colors.successBorder },
   resolveBtnText:{ fontSize: 12, fontWeight: "700", color: colors.success },
   resBox:        { backgroundColor: colors.surfaceUp, borderRadius: 10, padding: 10, marginTop: 10, borderLeftWidth: 3, borderLeftColor: colors.success },
+  descBox:       { backgroundColor: colors.surfaceUp, borderRadius: 10, padding: 10, marginTop: 10, borderLeftWidth: 3, borderLeftColor: colors.textTer },
   resLabel:      { fontSize: 10, fontWeight: "800", color: colors.textSec, textTransform: "uppercase", marginBottom: 3 },
   resText:       { fontSize: 13, color: colors.textPrimary, lineHeight: 18 },
+  descText:      { fontSize: 13, color: colors.textSec, lineHeight: 18 },
 });

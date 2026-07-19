@@ -53,16 +53,16 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const menuItems = [
-    {icon:<Ionicons name="medkit-outline" size={18} color="#C2386E" />, label:"Manage doctors",       screen:"Doctors"},
-    {icon:<Ionicons name="clipboard-outline" size={18} color="#C2386E" />, label:"All visit records",     screen:"Activity"},
-    {icon:<Ionicons name="stats-chart-outline" size={18} color="#C2386E" />, label:"Analytics dashboard",   screen:"Dashboard"},
-    {icon:<Ionicons name="key-outline" size={18} color="#C2386E" />, label:"Change password",       action: () => setChangePassVisible(true)},
+    {icon:<Ionicons name="medkit-outline" size={18} color="#7A2415" />, label:"Manage doctors",       screen:"Doctors"},
+    {icon:<Ionicons name="clipboard-outline" size={18} color="#7A2415" />, label:"All visit records",     screen:"Activity"},
+    {icon:<Ionicons name="stats-chart-outline" size={18} color="#7A2415" />, label:"Analytics dashboard",   screen:"Dashboard"},
+    {icon:<Ionicons name="key-outline" size={18} color="#7A2415" />, label:"Change password",       action: () => setChangePassVisible(true)},
   ];
 
   return (
     <ScrollView style={{flex:1,backgroundColor:colors.bg}} contentContainerStyle={{paddingBottom:insets.bottom+88}}>
       {/* Sunset header band */}
-      <LinearGradient colors={["#FF6B6B","#C2386E","#5B2A86"]} start={{x:0,y:0}} end={{x:1,y:1}} style={[pr.header,{paddingTop:insets.top+20}]}>
+      <LinearGradient colors={["#4A1209","#7A2415","#B85A2A"]} start={{x:0,y:0}} end={{x:1,y:1}} style={[pr.header,{paddingTop:insets.top+20}]}>
         <PopIn>
           <View style={pr.avatarWrap}>
             <View style={pr.avatar}><Text style={pr.avatarTxt}>{initials}</Text></View>

@@ -24,7 +24,7 @@ const Stack = createNativeStackNavigator();
 
 function AppTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: "#C2386E", tabBarInactiveTintColor: "#B89AAA" }}>
+    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: "#7A2415", tabBarInactiveTintColor: "#B89AAA" }}>
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}

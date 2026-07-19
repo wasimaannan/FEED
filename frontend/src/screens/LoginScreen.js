@@ -14,12 +14,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 const C = {
   bg:"#FAF7F8", surface:"#FFFFFF", border:"#F0E5EA",
-  brand:"#C2386E", brandMid:"#A8306B", gold:"#8B3FA8",
+  brand:"#7A2415", brandMid:"#4A1209", gold:"#B85A2A",
   text:"#1F1320", textSec:"#6B5563", textTer:"#A89098", danger:"#D6336C",
 };
 const DEV_BYPASS = true;
 const AVAILABLE_ZONES = ["HQ","East","West","North","South","Central"];
-const SUNSET = ["#FF6B6B","#C2386E","#5B2A86"];
+const SUNSET = ["#4A1209","#7A2415","#B85A2A"];
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -106,7 +106,7 @@ export default function LoginScreen() {
               {["login","signup"].map(m=>(
                 <TouchableOpacity key={m} style={{flex:1}} onPress={()=>{setMode(m);setError("");}}>
                   {mode===m
-                    ? <LinearGradient colors={["#FF6B6B","#C2386E"]} start={{x:0,y:0}} end={{x:1,y:0}} style={st.tabOn}>
+                    ? <LinearGradient colors={["#4A1209","#7A2415"]} start={{x:0,y:0}} end={{x:1,y:0}} style={st.tabOn}>
                         <Text style={st.tabTxtOn}>{m==="login"?"Sign in":"Create account"}</Text>
                       </LinearGradient>
                     : <View style={st.tabOff}><Text style={st.tabTxt}>{m==="login"?"Sign in":"Create account"}</Text></View>
@@ -213,7 +213,7 @@ const st = StyleSheet.create({
   forgotTxt:       {fontSize:12.5,color:C.brand,fontWeight:"600"},
   errorBox:        {flexDirection:"row",alignItems:"center",gap:8,backgroundColor:"rgba(214,51,108,0.08)",borderRadius:10,padding:12,marginTop:10},
   errorTxt:        {fontSize:13,color:C.danger,flex:1},
-  btn:             {borderRadius:13,paddingVertical:15,alignItems:"center",shadowColor:"#C2386E",shadowOpacity:0.35,shadowRadius:14,shadowOffset:{width:0,height:7},elevation:6},
+  btn:             {borderRadius:13,paddingVertical:15,alignItems:"center",shadowColor:"#7A2415",shadowOpacity:0.35,shadowRadius:14,shadowOffset:{width:0,height:7},elevation:6},
   btnTxt:          {color:"#fff",fontSize:15,fontWeight:"700"},
   divider:         {flexDirection:"row",alignItems:"center",gap:12,marginVertical:20},
   dline:           {flex:1,height:1,backgroundColor:C.border},

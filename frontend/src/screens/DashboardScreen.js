@@ -3,28 +3,25 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Animated, Sty
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAllDoctors, getAllVisits, getAllFarms, calcWeek } from "../api";
+import { getAllDoctors, getAllVisits, getAllFarms, calcWeek, getAllComplaints } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { fonts } from "../theme";
 
-const COMPLAINTS_KEY = "feed_complaints_v1";
-
 // ── Sunset gradient palette ──────────────────────────────────
 const G = {
-  header:     ["#FF6B6B", "#C2386E", "#5B2A86"],
-  doctors:    ["#FF6B6B", "#C2386E"],
-  visits:     ["#5B2A86", "#8B3FA8"],
-  target:     ["#FF9472", "#F2542D"],
-  complaints: ["#C2386E", "#8B3FA8"],
-  qLog:       ["#FF6B6B", "#C2386E"],
-  qDoctors:   ["#5B2A86", "#8B3FA8"],
-  qComplaints:["#C2386E", "#FF6B6B"],
-  qActivity:  ["#8B3FA8", "#5B2A86"],
+  header:     ["#4A1209", "#7A2415", "#B85A2A"],
+  doctors:    ["#4A1209", "#7A2415"],
+  visits:     ["#7A2415", "#B85A2A"],
+  target:     ["#B85A2A", "#D4824A"],
+  complaints: ["#B81A1A", "#7A2415"],
+  qLog:       ["#4A1209", "#7A2415"],
+  qDoctors:   ["#7A2415", "#B85A2A"],
+  qComplaints:["#B81A1A", "#7A2415"],
+  qActivity:  ["#B85A2A", "#D4824A"],
 };
 const NEUTRAL = {
-  bg: "#FAF7F8", surface: "#FFFFFF", border: "#F0E5EA",
-  textPrimary: "#1F1320", textSec: "#7A5C6E", textTer: "#B89AAA",
+  bg: "#FFFAF8", surface: "#FFFFFF", border: "#F0E0D8",
+  textPrimary: "#1F0A06", textSec: "#6B4A40", textTer: "#C4A090",
 };
 
 function StatCard({ label, value, sub, gradient, icon, delay, onPress }) {
@@ -68,11 +65,26 @@ export default function DashboardScreen({ navigation }) {
 
   const loadComplaints = useCallback(async () => {
     try {
-      const raw = await AsyncStorage.getItem(COMPLAINTS_KEY);
-      const all = raw ? JSON.parse(raw) : [];
-      const mine = user?.enrollId ? all.filter(c => String(c.intEnroll) === String(user.enrollId) && !c.dtResolved) : all.filter(c => !c.dtResolved);
-      setComplaints(mine);
-    } catch (e) { setComplaints([]); }
+      const all = await getAllComplaints();
+      const mine = all.filter(c => {
+        const creatorId = String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "");
+        // Active if NOT (IsActive is false/0 OR Status is Resolved OR has Resolution)
+        const isRes = c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' ||
+                      String(c.IsActive).toLowerCase() === 'false' ||
+                      c.Status === "Resolved" || (c.Resolution && c.Resolution !== "");
+        return creatorId === String(user?.enrollId) && !isRes;
+      });
+      // Sort newest first
+      const sorted = mine.sort((a, b) => {
+        const dateA = new Date(a.ComplaintDate || a.dtReported || a.CreatedAt || a.OpenDate || 0);
+        const dateB = new Date(b.ComplaintDate || b.dtReported || b.CreatedAt || a.OpenDate || 0);
+        return dateB - dateA;
+      });
+      setComplaints(sorted);
+    } catch (e) {
+      console.warn("Dashboard: Failed to load complaints:", e);
+      setComplaints([]);
+    }
   }, [user]);
 
   const load = useCallback(async()=>{
@@ -91,7 +103,7 @@ export default function DashboardScreen({ navigation }) {
   const zoneCounts   = doctors.reduce((a,d)=>{const z=d.strZone||"Unassigned";a[z]=(a[z]||0)+1;return a;},{});
   const recentVisits = [...visits].sort((a,b)=>new Date(b.strDate||b.date)-new Date(a.strDate||a.date)).slice(0,4);
 
-  const ZONE_COLORS  = ["#FF6B6B","#C2386E","#8B3FA8","#5B2A86","#F2542D"];
+  const ZONE_COLORS  = ["#FF6B6B","#7A2415","#8B3FA8","#5B2A86","#F2542D"];
 
   const initials = user && user.fullName
     ? user.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
@@ -101,7 +113,7 @@ export default function DashboardScreen({ navigation }) {
     <ScrollView style={{flex:1,backgroundColor:NEUTRAL.bg}}
       contentContainerStyle={{paddingBottom:insets.bottom+88}}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refresh} onRefresh={()=>{setRefresh(true);load();}} tintColor="#C2386E" colors={["#C2386E"]}/>}
+      refreshControl={<RefreshControl refreshing={refresh} onRefresh={()=>{setRefresh(true);load();}} tintColor="#4A1209" colors={["#4A1209"]}/>}
     >
       <LinearGradient colors={G.header} start={{x:0,y:0}} end={{x:1,y:1}} style={[d.header,{paddingTop:insets.top+16}]}>
         <View style={{flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between"}}>
@@ -128,7 +140,7 @@ export default function DashboardScreen({ navigation }) {
                 String(doc.FullName || doc.strDoctorName || "").toLowerCase().includes(search.toLowerCase())
               ).length
             })</Text>
-            <TouchableOpacity onPress={() => setSearch("")}><Text style={[d.secAction,{color:"#C2386E"}]}>Clear</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setSearch("")}><Text style={[d.secAction,{color:"#7A2415"}]}>Clear</Text></TouchableOpacity>
           </View>
           <View style={[d.card,{marginHorizontal:16}]}>
             {(() => {
@@ -152,7 +164,7 @@ export default function DashboardScreen({ navigation }) {
                       <Text style={d.visitName}>{doc.FullName || doc.strDoctorName}</Text>
                       <Text style={d.visitMeta}>{doc.Specialization || doc.strSpecialization} · {doc.ZoneName || doc.strZone}</Text>
                     </View>
-                    <Text style={[d.visitDate, {color: "#C2386E", fontWeight: "600"}]}>Log Visit ➔</Text>
+                    <Text style={[d.visitDate, {color: "#7A2415", fontWeight: "600"}]}>Log Visit ➔</Text>
                   </TouchableOpacity>
                 ))
               );
@@ -173,22 +185,22 @@ export default function DashboardScreen({ navigation }) {
               <View style={d.secHead}>
                 <LinearGradient colors={G.complaints} style={d.secBar}/>
                 <Text style={d.secTitle}>Open complaints</Text>
-                <TouchableOpacity onPress={()=>navigation.navigate("Complaints")}><Text style={[d.secAction,{color:"#C2386E"}]}>View all</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>navigation.navigate("Complaints")}><Text style={[d.secAction,{color:"#7A2415"}]}>View all</Text></TouchableOpacity>
               </View>
               <View style={[d.card,{marginHorizontal:16,borderColor:"#F5D9E2"}]}>
                 {complaints.slice(0,3).map((c,i)=>(
-                  <TouchableOpacity key={c.id} onPress={()=>navigation.navigate("Complaints")} activeOpacity={0.7}
+                  <TouchableOpacity key={c.ComplaintID || c.id || i} onPress={()=>navigation.navigate("Complaints")} activeOpacity={0.7}
                     style={[d.complaintRow, i<Math.min(complaints.length,3)-1&&{borderBottomWidth:1,borderBottomColor:NEUTRAL.border}]}>
                     <View style={d.complaintDot}/>
                     <View style={{flex:1}}>
                       <View style={{flexDirection:"row",flexWrap:"wrap",alignItems:"center",gap:4}}>
-                        <Text style={d.complaintTag}>{c.strFarmType}</Text>
+                        <Text style={d.complaintTag}>{c.FarmTypeName || c.strFarmType}</Text>
                         <Text style={d.complaintSep}>›</Text>
-                        <Text style={d.complaintTag}>{c.strCategory}</Text>
+                        <Text style={d.complaintTag}>{c.ComplaintType || c.strCategory}</Text>
                       </View>
-                      <Text style={d.complaintName}>{c.strComplaint}</Text>
+                      <Text style={d.complaintName}>{c.ComplaintName || c.strComplaint}</Text>
                     </View>
-                    <Text style={d.complaintDate}>{c.dtReported}</Text>
+                    <Text style={d.complaintDate}>{c.ComplaintDate ? c.ComplaintDate.split('T')[0] : (c.dtReported || "")}</Text>
                   </TouchableOpacity>
                 ))}
                 {complaints.length > 3 && (
@@ -272,7 +284,7 @@ const d = StyleSheet.create({
   greet:       { fontFamily:fonts.body, fontSize:13, color:"rgba(255,255,255,0.75)" },
   title:       { fontFamily:fonts.display, fontSize:30, fontWeight:"800", color:"#fff", letterSpacing:-0.4, marginTop:2 },
   sub:         { fontFamily:fonts.mono, fontSize:11, color:"rgba(255,255,255,0.65)", marginTop:4 },
-  avatar:      { width:44, height:44, borderRadius:22, backgroundColor:"rgba(255,255,255,0.22)", alignItems:"center", justifyContent:"center", borderWidth:2, borderColor:"rgba(255,255,255,0.35)" },
+  avatar:      { width:44, height:44, borderRadius:22, backgroundColor:"rgba(255,255,255,0.18)", alignItems:"center", justifyContent:"center", borderWidth:2, borderColor:"rgba(255,255,255,0.35)" },
   avatarTxt:   { color:"#fff", fontFamily:fonts.label, fontSize:13, fontWeight:"800" },
   searchBar:   { flexDirection:"row", alignItems:"center", backgroundColor:"rgba(255,255,255,0.15)", borderRadius:12, paddingHorizontal:14, paddingVertical:10, marginTop:14 },
   grid:        { flexDirection:"row", flexWrap:"wrap", paddingHorizontal:12, paddingTop:16, gap:10 },
@@ -306,11 +318,11 @@ const d = StyleSheet.create({
   visitMeta:   { fontFamily:fonts.body, fontSize:11, color:NEUTRAL.textSec, marginTop:2 },
   visitDate:   { fontFamily:fonts.mono, fontSize:10, color:NEUTRAL.textTer },
   complaintRow: { flexDirection:"row", alignItems:"center", gap:12, paddingHorizontal:14, paddingVertical:13 },
-  complaintDot: { width:8, height:8, borderRadius:4, backgroundColor:"#C2386E", flexShrink:0 },
+  complaintDot: { width:8, height:8, borderRadius:4, backgroundColor:"#7A2415", flexShrink:0 },
   complaintTag: { fontFamily:fonts.label, fontSize:9.5, fontWeight:"700", color:NEUTRAL.textTer, textTransform:"uppercase", letterSpacing:0.5 },
   complaintSep: { fontFamily:fonts.body, fontSize:9.5, color:NEUTRAL.textTer },
   complaintName:{ fontFamily:fonts.body, fontSize:13, color:NEUTRAL.textPrimary, fontWeight:"600", marginTop:2 },
   complaintDate:{ fontFamily:fonts.mono, fontSize:10, color:NEUTRAL.textTer },
   moreRow:     { paddingVertical:12, alignItems:"center", backgroundColor:"#FFF5F7" },
-  moreTxt:     { fontFamily:fonts.body, fontSize:12, color:"#C2386E", fontWeight:"600" },
+  moreTxt:     { fontFamily:fonts.body, fontSize:12, color:"#7A2415", fontWeight:"600" },
 });
