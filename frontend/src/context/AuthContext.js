@@ -69,15 +69,20 @@ export function AuthProvider({ children }) {
       const response = await loginUser({ enrollId, password });
       const token = response.access_token || response.token || response.Token;
       
-      // Fetch user profile to get full details (FullName, ZoneName, Username)
+      // Fetch user profile to get full details (FullName, ZoneName, Username, Role)
       const profile = await getUserProfile(enrollId, token);
       
+      // Extract role specifically from the profile data
+      const role = profile.Role || profile.role || profile.Type || profile.RoleName || "FieldUser";
+
       // Create session user object
       const sessionUser = {
         enrollId: Number(enrollId),
         fullName: profile.FullName || profile.fullName || "Field User",
         zoneName: profile.ZoneName || profile.zoneName || "HQ",
         username: profile.Username || profile.username || "",
+        role: role,
+        isAdmin: String(role).toLowerCase().includes('admin'),
         ...profile,
         ...response, // Merge login response which contains the token
       };
@@ -157,10 +162,12 @@ export function AuthProvider({ children }) {
   // Dev bypass helper to immediately mock login
   const devBypassLogin = async () => {
     const mockUser = {
-      enrollId: 9999,
-      fullName: "Dev User",
+      enrollId: 306007,
+      fullName: "Admin User",
       zoneName: "HQ",
-      username: "dev_user",
+      username: "admin_dev",
+      role: "Admin",
+      isAdmin: true
     };
     await SafeStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
     setUser(mockUser);

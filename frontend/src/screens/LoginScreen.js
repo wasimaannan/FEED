@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Animated, KeyboardAvoidingView,
-  Platform, ScrollView, ActivityIndicator, Alert,
+  Platform, ScrollView, ActivityIndicator, Alert, Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
@@ -85,14 +85,12 @@ export default function LoginScreen() {
           <LinearGradient colors={SUNSET} start={{x:0,y:0}} end={{x:1,y:1}} style={[st.hero,{paddingTop:insets.top+32}]}>
             <View style={st.heroDec1}/><View style={st.heroDec2}/>
             <Animated.View style={{opacity:fadeIn,alignItems:"center"}}>
-              <View style={st.mark}>
-                <Ionicons name="leaf" size={28} color="#fff"/>
-              </View>
+              <Image source={require("../../assets/Akij-Feed-Logo_English.png")} style={{ width: 140, height: 50, resizeMode: 'contain', marginBottom: 20 }} />
               <Text style={st.brandLbl}>AKIJ FEED · FIELD OPERATIONS</Text>
               <Text style={st.heroTitle}>FEED Entry System</Text>
               <Text style={st.heroSub}>
                 {mode==="login"
-                  ? "Sign in with your enrolled credentials to manage doctors, farms and visits"
+                  ? "Sign in with your enrolled credentials"
                   : "Register your enrollment details to get started"}
               </Text>
             </Animated.View>
@@ -160,7 +158,7 @@ export default function LoginScreen() {
                 <Text style={st.devTxt}>Dev — skip login</Text>
               </TouchableOpacity>
             )}
-            <Text style={st.footer}>FEED Entry System · v1.0.1 · Akij Group</Text>
+            <Text style={st.footer}>FEED Entry System · v1.0.1 · Akij Resourse</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -196,7 +194,6 @@ const st = StyleSheet.create({
   hero:            {paddingHorizontal:28,paddingBottom:52,overflow:"hidden",alignItems:"center"},
   heroDec1:        {position:"absolute",top:-60,right:-60,width:220,height:220,borderRadius:110,backgroundColor:"rgba(255,255,255,0.10)"},
   heroDec2:        {position:"absolute",bottom:-70,left:-50,width:180,height:180,borderRadius:90,backgroundColor:"rgba(255,255,255,0.06)"},
-  mark:            {width:60,height:60,borderRadius:20,backgroundColor:"rgba(255,255,255,0.20)",alignItems:"center",justifyContent:"center",marginBottom:18,borderWidth:1,borderColor:"rgba(255,255,255,0.3)"},
   brandLbl:        {fontSize:10,color:"rgba(255,255,255,0.70)",letterSpacing:2.5,fontWeight:"700",textTransform:"uppercase"},
   heroTitle:       {fontSize:26,fontWeight:"800",color:"#fff",marginTop:6,letterSpacing:-0.5,textAlign:"center"},
   heroSub:         {fontSize:13,color:"rgba(255,255,255,0.75)",marginTop:8,lineHeight:19,textAlign:"center",maxWidth:280},

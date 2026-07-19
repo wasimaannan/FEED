@@ -12,7 +12,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import LoginScreen     from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import DoctorsScreen   from "./src/screens/DoctorsScreen";
-import LogVisitScreen  from "./src/screens/LogVisitScreen";
 import ActivityScreen  from "./src/screens/ActivityScreen";
 import ProfileScreen   from "./src/screens/ProfileScreen";
 import ComplaintScreen from "./src/screens/ComplaintScreen";
@@ -36,11 +35,6 @@ function AppTabs() {
         options={{ tabBarLabel:"Doctors",  tabBarIcon:({color,size}) => <Ionicons name="medkit-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
-        name="LogVisit"
-        component={LogVisitScreen}
-        options={{ tabBarLabel:"Log",      tabBarIcon:({color,size}) => <Ionicons name="add-circle-outline" size={size} color={color} /> }}
-      />
-      <Tab.Screen
         name="Complaints"
         component={ComplaintScreen}
         options={{ tabBarLabel:"Complaints", tabBarIcon:({color,size}) => <Ionicons name="flag-outline" size={size} color={color} /> }}
@@ -48,7 +42,7 @@ function AppTabs() {
       <Tab.Screen
         name="Activity"
         component={ActivityScreen}
-        options={{ tabBarLabel:"Activity", tabBarIcon:({color,size}) => <Ionicons name="bar-chart-outline" size={size} color={color} /> }}
+        options={{ tabBarLabel:"Activity", tabBarIcon:({color,size}) => <Ionicons name="time-outline" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Profile"

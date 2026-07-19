@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -65,7 +65,9 @@ export default function ProfileScreen({ navigation }) {
       <LinearGradient colors={["#4A1209","#7A2415","#B85A2A"]} start={{x:0,y:0}} end={{x:1,y:1}} style={[pr.header,{paddingTop:insets.top+20}]}>
         <PopIn>
           <View style={pr.avatarWrap}>
-            <View style={pr.avatar}><Text style={pr.avatarTxt}>{initials}</Text></View>
+            <View style={pr.avatar}>
+              <Image source={require("../../assets/feed logo akij.png")} style={{ width: 60, height: 60, borderRadius: 30 }} />
+            </View>
           </View>
         </PopIn>
         <FadeIn delay={80}>

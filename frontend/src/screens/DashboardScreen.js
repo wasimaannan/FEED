@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Animated, StyleSheet, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Animated, StyleSheet, TextInput, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { getAllDoctors, getAllVisits, getAllFarms, calcWeek, getAllComplaints } from "../api";
+import { getAllDoctors, getAllFarms, calcWeek, getAllComplaints } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { fonts } from "../theme";
 
@@ -14,7 +14,6 @@ const G = {
   visits:     ["#7A2415", "#B85A2A"],
   target:     ["#B85A2A", "#D4824A"],
   complaints: ["#B81A1A", "#7A2415"],
-  qLog:       ["#4A1209", "#7A2415"],
   qDoctors:   ["#7A2415", "#B85A2A"],
   qComplaints:["#B81A1A", "#7A2415"],
   qActivity:  ["#B85A2A", "#D4824A"],
@@ -51,7 +50,6 @@ export default function DashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [doctors,setDoctors]=useState([]);
-  const [visits, setVisits] =useState([]);
   const [farms,  setFarms]  =useState([]);
   const [complaints, setComplaints] = useState([]);
   const [refresh,setRefresh]=useState(false);
@@ -66,13 +64,21 @@ export default function DashboardScreen({ navigation }) {
   const loadComplaints = useCallback(async () => {
     try {
       const all = await getAllComplaints();
+      const isAdmin =
+        String(user?.role || user?.Role || "").toLowerCase().includes('admin') ||
+        user?.isAdmin === true ||
+        user?.enrollId === 306007;
+
       const mine = all.filter(c => {
-        const creatorId = String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "");
-        // Active if NOT (IsActive is false/0 OR Status is Resolved OR has Resolution)
         const isRes = c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' ||
                       String(c.IsActive).toLowerCase() === 'false' ||
                       c.Status === "Resolved" || (c.Resolution && c.Resolution !== "");
-        return creatorId === String(user?.enrollId) && !isRes;
+
+        if (isRes) return false;
+        if (isAdmin) return true;
+
+        const creatorId = String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "");
+        return creatorId === String(user?.enrollId);
       });
       // Sort newest first
       const sorted = mine.sort((a, b) => {
@@ -89,8 +95,8 @@ export default function DashboardScreen({ navigation }) {
 
   const load = useCallback(async()=>{
     try {
-      const [dc,vs,fm] = await Promise.all([getAllDoctors().catch(()=>[]), getAllVisits().catch(()=>[]), getAllFarms().catch(()=>[])]);
-      setDoctors(dc||[]); setVisits(vs||[]); setFarms(fm||[]);
+      const [dc,fm] = await Promise.all([getAllDoctors().catch(()=>[]), getAllFarms().catch(()=>[])]);
+      setDoctors(dc||[]); setFarms(fm||[]);
       await loadComplaints();
     } finally { setRefresh(false); }
   },[loadComplaints]);
@@ -98,11 +104,7 @@ export default function DashboardScreen({ navigation }) {
   useEffect(()=>{ load(); },[]);
   useFocusEffect(useCallback(() => { loadComplaints(); }, [loadComplaints]));
 
-  const weekVisits   = visits.filter(v=>calcWeek(v.strDate||v.date)===weekNum);
-  const targetPct    = Math.min(100,Math.round((weekVisits.length/Math.max(doctors.length,1))*100));
   const zoneCounts   = doctors.reduce((a,d)=>{const z=d.strZone||"Unassigned";a[z]=(a[z]||0)+1;return a;},{});
-  const recentVisits = [...visits].sort((a,b)=>new Date(b.strDate||b.date)-new Date(a.strDate||a.date)).slice(0,4);
-
   const ZONE_COLORS  = ["#FF6B6B","#7A2415","#8B3FA8","#5B2A86","#F2542D"];
 
   const initials = user && user.fullName
@@ -115,18 +117,23 @@ export default function DashboardScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refresh} onRefresh={()=>{setRefresh(true);load();}} tintColor="#4A1209" colors={["#4A1209"]}/>}
     >
-      <LinearGradient colors={G.header} start={{x:0,y:0}} end={{x:1,y:1}} style={[d.header,{paddingTop:insets.top+16}]}>
+      <LinearGradient colors={G.header} start={{x:0,y:0}} end={{x:1,y:1}} style={[d.header,{paddingTop:insets.top+12}]}>
+        <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between", marginBottom: 12}}>
+           <Image source={require("../../assets/Akij-Feed-Logo_English.png")} style={{ width: 100, height: 40, resizeMode: 'contain' }} />
+           <TouchableOpacity style={d.avatar} onPress={()=>navigation.navigate("Profile")} activeOpacity={0.8}>
+             <Text style={d.avatarTxt}>{initials}</Text>
+           </TouchableOpacity>
+        </View>
         <View style={{flexDirection:"row",alignItems:"flex-start",justifyContent:"space-between"}}>
           <View style={{flex:1}}>
             <Text style={d.greet}>{greet}</Text>
             <Text style={d.title}>Dashboard</Text>
             <Text style={d.sub}>Week {weekNum} · {dateStr}</Text>
           </View>
-          <TouchableOpacity style={d.avatar} onPress={()=>navigation.navigate("Profile")} activeOpacity={0.8}><Text style={d.avatarTxt}>{initials}</Text></TouchableOpacity>
         </View>
         <View style={d.searchBar}>
           <Text style={{fontSize:15,color:"rgba(255,255,255,0.65)",marginRight:8}}>⌕</Text>
-          <TextInput style={{flex:1,fontFamily:fonts.body,fontSize:14,color:"#fff"}} placeholder="Search doctors, visits…" placeholderTextColor="rgba(255,255,255,0.55)" value={search} onChangeText={setSearch}/>
+          <TextInput style={{flex:1,fontFamily:fonts.body,fontSize:14,color:"#fff"}} placeholder="Search doctors, complaints…" placeholderTextColor="rgba(255,255,255,0.55)" value={search} onChangeText={setSearch}/>
         </View>
       </LinearGradient>
 
@@ -155,7 +162,7 @@ export default function DashboardScreen({ navigation }) {
                   <TouchableOpacity key={doc.DoctorID || idx} style={[d.visitRow, idx < Math.min(matches.length, 10) - 1 && {borderBottomWidth:1,borderBottomColor:NEUTRAL.border}]}
                     onPress={() => {
                       setSearch("");
-                      navigation.navigate("LogVisit", { enrollId: doc.EnrollID || doc.enrollID || doc.intEnroll });
+                      navigation.navigate("Doctors", { enrollId: doc.EnrollID || doc.enrollID || doc.intEnroll });
                     }}
                     activeOpacity={0.7}
                   >
@@ -164,7 +171,7 @@ export default function DashboardScreen({ navigation }) {
                       <Text style={d.visitName}>{doc.FullName || doc.strDoctorName}</Text>
                       <Text style={d.visitMeta}>{doc.Specialization || doc.strSpecialization} · {doc.ZoneName || doc.strZone}</Text>
                     </View>
-                    <Text style={[d.visitDate, {color: "#7A2415", fontWeight: "600"}]}>Log Visit ➔</Text>
+                    <Text style={[d.visitDate, {color: "#7A2415", fontWeight: "600"}]}>View Profile ➔</Text>
                   </TouchableOpacity>
                 ))
               );
@@ -174,10 +181,10 @@ export default function DashboardScreen({ navigation }) {
       ) : (
         <>
           <View style={d.grid}>
-            <StatCard icon="✦" label="Doctors"    value={doctors.length}      sub="All active"  gradient={G.doctors}    delay={0}   onPress={()=>navigation.navigate("Doctors")} />
-            <StatCard icon="◎" label="Visits"     value={weekVisits.length}   sub="This week"   gradient={G.visits}     delay={60}  onPress={()=>navigation.navigate("LogVisit")} />
-            <StatCard icon="%" label="Target"     value={`${targetPct}%`}     sub="On track"    gradient={G.target}     delay={120} />
-            <StatCard icon="⚑" label="Complaints" value={complaints.length}   sub="Open"        gradient={G.complaints} delay={180} onPress={()=>navigation.navigate("Complaints")} />
+            <StatCard icon="✦" label="Doctors"    value={doctors.length}      sub="Total active"  gradient={G.doctors}    delay={0}   onPress={()=>navigation.navigate("Doctors")} />
+            <StatCard icon="◎" label="Farms"      value={farms.length}        sub="Registered"    gradient={G.visits}     delay={60}  onPress={()=>navigation.navigate("Farms")} />
+            <StatCard icon="⚑" label="Open"       value={complaints.length}   sub="Pending"       gradient={G.complaints} delay={120} onPress={()=>navigation.navigate("Complaints")} />
+            <StatCard icon="✓" label="Activity"   value="History"             sub="Recent events" gradient={G.target}     delay={180} onPress={()=>navigation.navigate("Activity")} />
           </View>
 
           {complaints.length > 0 && (
@@ -189,7 +196,7 @@ export default function DashboardScreen({ navigation }) {
               </View>
               <View style={[d.card,{marginHorizontal:16,borderColor:"#F5D9E2"}]}>
                 {complaints.slice(0,3).map((c,i)=>(
-                  <TouchableOpacity key={c.ComplaintID || c.id || i} onPress={()=>navigation.navigate("Complaints")} activeOpacity={0.7}
+                  <TouchableOpacity key={c.intAutoID || c.ComplaintID || i} onPress={()=>navigation.navigate("Complaints")} activeOpacity={0.7}
                     style={[d.complaintRow, i<Math.min(complaints.length,3)-1&&{borderBottomWidth:1,borderBottomColor:NEUTRAL.border}]}>
                     <View style={d.complaintDot}/>
                     <View style={{flex:1}}>
@@ -215,10 +222,9 @@ export default function DashboardScreen({ navigation }) {
           <View style={d.secHead}><LinearGradient colors={G.doctors} style={d.secBar}/><Text style={d.secTitle}>Quick actions</Text></View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal:16,gap:10,paddingBottom:4,paddingRight:26}} decelerationRate="fast">
             {[
-              {label:"Log visit",     sub:"Record today's visit", screen:"LogVisit",   icon:"▤",  gradient:G.qLog},
-              {label:"Doctors",       sub:"Master data",          screen:"Doctors",    icon:"✦",  gradient:G.qDoctors},
               {label:"Complaints",    sub:"Register / resolve",   screen:"Complaints", icon:"⚑",  gradient:G.qComplaints},
-              {label:"Activity log",  sub:"Audit · sheet sync",   screen:"Activity",   icon:"◎",  gradient:G.qActivity},
+              {label:"Doctors",       sub:"Master data",          screen:"Doctors",    icon:"✦",  gradient:G.qDoctors},
+              {label:"Timeline",      sub:"System activity",      screen:"Activity",   icon:"◎",  gradient:G.qActivity},
             ].map(item=>(
               <TouchableOpacity key={item.label} style={d.quickCardWrap} onPress={()=>navigation.navigate(item.screen)} activeOpacity={0.85}>
                 <View style={d.quickCard}>
@@ -250,27 +256,6 @@ export default function DashboardScreen({ navigation }) {
                     </View>
                   );
                 })
-            }
-          </View>
-
-          <View style={d.secHead}>
-            <LinearGradient colors={G.target} style={d.secBar}/>
-            <Text style={d.secTitle}>Recent visits</Text>
-            <TouchableOpacity onPress={()=>navigation.navigate("Activity")}><Text style={[d.secAction,{color:"#F2542D"}]}>View all</Text></TouchableOpacity>
-          </View>
-          <View style={[d.card,{marginHorizontal:16}]}>
-            {recentVisits.length===0
-              ? <Text style={d.empty}>No visits logged yet</Text>
-              : recentVisits.map((v,i)=>(
-                  <View key={i} style={[d.visitRow, i<recentVisits.length-1&&{borderBottomWidth:1,borderBottomColor:NEUTRAL.border}]}>
-                    <LinearGradient colors={G.doctors} style={d.visitBadge}><Text style={d.visitBadgeTxt}>#{v.intEnroll||v.enroll}</Text></LinearGradient>
-                    <View style={{flex:1}}>
-                      <Text style={d.visitName}>Enrol #{v.intEnroll||v.enroll}</Text>
-                      <Text style={d.visitMeta}>{v.strFirmType||v.firmType} · Wk {v.intWeek||v.week}</Text>
-                    </View>
-                    <Text style={d.visitDate}>{v.strDate||v.date}</Text>
-                  </View>
-                ))
             }
           </View>
         </>

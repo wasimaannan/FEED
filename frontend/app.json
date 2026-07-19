@@ -4,17 +4,17 @@
     "slug": "feed-entry-system",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/feed logo akij.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/feed logo akij.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
     "android": {
-      "icon": "./assets/icon.png",
+      "icon": "./assets/feed logo akij.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/feed logo akij.png",
         "backgroundColor": "#1A3A6B"
       },
       "package": "com.feedentry.app",

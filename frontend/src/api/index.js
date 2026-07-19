@@ -208,18 +208,41 @@ export async function getAllDoctors() {
 
 export async function getDoctor(id) {
   try {
-    const res = await adminAuthRequest(`/${id}`, { prefix: "/doctors", method: "GET" });
-    const found = res.data || res.Data || res.payload || res.Payload || res;
-    if (found && typeof found === "object" && !Array.isArray(found)) {
+    // 1. Try doctors table first (legacy master data)
+    try {
+      const res = await adminAuthRequest(`/${id}`, { prefix: "/doctors", method: "GET" });
+      const found = res.data || res.Data || res.payload || res.Payload || res;
+      if (found && typeof found === "object" && !Array.isArray(found) && (found.EnrollID || found.intEnroll)) {
+        return {
+          ...found,
+          EnrollID: found.EnrollID || found.enrollID || found.intEnroll || found.EnrollId || found.enrollId,
+          FullName: found.FullName || found.strDoctorName || found.fullName || "Unknown Doctor",
+          strDoctorName: found.FullName || found.strDoctorName || found.fullName,
+          strZone: found.ZoneName || found.strZone,
+          strSpecialization: found.Specialization || found.strSpecialization
+        };
+      }
+    } catch (e) {
+      console.log("API: Doctor not found in doctors table, checking users...");
+    }
+
+    // 2. Fallback to users table (where new signups go)
+    const usersRes = await adminAuthRequest("/list", { prefix: "/users", method: "GET" });
+    const userList = usersRes.data || usersRes.payload || (Array.isArray(usersRes) ? usersRes : []);
+    const foundUser = userList.find(u => String(u.EnrollID || u.enrollId || u.intEnroll) === String(id));
+
+    if (foundUser) {
       return {
-        ...found,
-        EnrollID: found.EnrollID || found.enrollID || found.intEnroll || found.EnrollId || found.enrollId,
-        FullName: found.FullName || found.strDoctorName || found.fullName || "Unknown Doctor",
-        strDoctorName: found.FullName || found.strDoctorName || found.fullName,
-        strZone: found.ZoneName || found.strZone,
-        strSpecialization: found.Specialization || found.strSpecialization
+        ...foundUser,
+        EnrollID: foundUser.EnrollID || foundUser.enrollId || foundUser.intEnroll,
+        FullName: foundUser.FullName || foundUser.fullName || foundUser.Username || "New User",
+        strDoctorName: foundUser.FullName || foundUser.fullName || foundUser.Username,
+        strZone: foundUser.ZoneName || foundUser.strZone || "HQ",
+        strSpecialization: foundUser.Specialization || "General"
       };
     }
+
+    // 3. Last resort: search all doctors list
     const all = await getAllDoctors();
     return all.find(d => String(d.EnrollID) === String(id));
   } catch (e) {
@@ -234,16 +257,18 @@ export async function saveDoctor(data, mode = "new") {
   const method = isEdit ? "PUT" : "POST";
 
   // Map Specialization to valid API values based on user requirements:
-  // "sonali broiler layer and cattle andfish"
-  const validSpecs = ["Sonali", "Broiler", "Layer", "Cattle", "Fish"];
-  let spec = data.strSpecialization || data.Specialization || "Cattle";
+  // UI allows: Broiler, Layer, Sonali, Cattle, Fish
+  // Backend strictly requires: Cattle, Fish, or Poultry
+  const spec = (data.strSpecialization || data.Specialization || "").toLowerCase();
 
-  // Basic normalization
-  if (spec.toLowerCase() === "poultry") spec = "Broiler"; // Default poultry to Broiler if not specific
-
-  // Find match case-insensitively
-  const match = validSpecs.find(s => s.toLowerCase() === spec.toLowerCase());
-  const finalSpec = match || "Cattle";
+  let finalSpec = "Cattle"; // Default
+  if (spec.includes("fish")) {
+    finalSpec = "Fish";
+  } else if (spec.includes("broiler") || spec.includes("layer") || spec.includes("sonali") || spec.includes("poultry")) {
+    finalSpec = "Poultry";
+  } else {
+    finalSpec = "Cattle";
+  }
 
   const payload = {
     FullName: data.strDoctorName || data.FullName || "",
@@ -299,117 +324,7 @@ export async function saveFarm(data) {
   });
 }
 
-// ===================== VISITS =====================
-
-export async function getAllVisits() {
-  try {
-    const res = await adminAuthRequest("", { prefix: "/farm-visits", method: "GET" });
-    if (res && Array.isArray(res)) {
-      return res.map(v => ({
-        ...v,
-        enroll: v.DoctorEnrollID,
-        intEnroll: v.DoctorEnrollID,
-        name_of_doctor: v.DoctorName,
-        zone: v.ZoneName,
-        strFirmType: v.FarmType,
-        date: v.VisitDate ? v.VisitDate.split('T')[0] : null,
-        strDate: v.VisitDate ? v.VisitDate.split('T')[0] : null,
-        week: v.WeekNumber,
-        intWeek: v.WeekNumber,
-        intVisitTarget: v.VisitTargetTotal,
-        intNewVisitTarget: v.NewVisitTarget,
-        intRepVisitTarget: v.RepVisitTarget,
-        intProblemSolveTarget: v.ProblemSolveTarget,
-        intNewFirmOnboardTarget: v.NewFarmOnboardTarget,
-        strMortality: v.MortalityLevel,
-        strFeedQuality: v.FeedQuality,
-        strDisease: v.DiseaseObserved,
-        intRetention: v.RepeatCustomerRetention,
-        salesMT: v.SalesInfluencedMT,
-        salesCr: v.SalesInfluencedCrore,
-        strAchievement: v.Achievement,
-        strChallenges: v.Challenges,
-        strNextPlan: v.NextWeekPlan
-      }));
-    }
-    return [];
-  } catch (e) {
-    console.warn("getAllVisits failed:", e);
-    return [];
-  }
-}
-
-export async function saveVisit(data) {
-  const payload = {
-    DoctorID: Number(data.enroll),
-    FarmID: Number(data.FarmID || 50001),
-    UserID: Number(data.UserID || 1),
-    DoctorEnrollID: Number(data.enroll),
-    DoctorName: data.name_of_doctor || "",
-    ZoneName: data.zone || "",
-    ZoneCode: "101",
-    VisitDate: data.date || new Date().toISOString().split("T")[0],
-    WeekNumber: Number(data.week || 1),
-    Specialization: "Broiler", // "Poultry" was invalid, defaulting to "Broiler"
-    FarmType: data.strFirmType || "Broiler",
-    ActiveFarmsBroiler: 0,
-    ActiveFarmsLayer: 0,
-    ActiveFarmsSonali: 0,
-    ActiveFarmsTotal: 0,
-    UnderService: 0,
-    VisitTargetTotal: Number(data.intVisitTarget || 0),
-    VisitAchievedTotal: Number(data.intVisitTarget || 0),
-    NewVisitTarget: Number(data.intNewVisitTarget || 0),
-    NewVisitAchieved: Number(data.intNewVisitTarget || 0),
-    RepVisitTarget: Number(data.intRepVisitTarget || 0),
-    RepVisitAchieved: Number(data.intRepVisitTarget || 0),
-    ProblemSolveTarget: Number(data.intProblemSolveTarget || 0),
-    ProblemSolvedAchieved: Number(data.intProblemSolveTarget || 0),
-    NewFarmOnboardTarget: Number(data.intNewFirmOnboardTarget || 0),
-    NewFarmOnboardBroiler: 0,
-    NewFarmOnboardLayer: 0,
-    NewFarmOnboardSonali: 0,
-    NewFarmOnboardBeef: 0,
-    NewFarmOnboardDairy: 0,
-    NewFarmOnboardMixed: 0,
-    NewFarmOnboardFish: "0",
-    SalesInfluencedMT: Number(data.salesMT || 0),
-    SalesInfluencedCrore: Number(data.salesCr || 0),
-    SalesInfluencedTarget: 0,
-    FarmConversionMT: 0,
-    FarmConversionCrore: 0,
-    MortalityBroiler: 0,
-    MortalityLayer: 0,
-    MortalitySonali: 0,
-    MortalityBeef: 0,
-    MortalityDairy: 0,
-    MortalityMixed: 0,
-    MortalityFish: "0",
-    MortalityLevel: data.strMortality || "Low",
-    RepeatCustomerRetention: Number(data.intRetention || 0),
-    ComplaintReceived: 0,
-    ComplaintClosure: 0,
-    FeedQuality: data.strFeedQuality || "Good",
-    FeedIntake: "Normal",
-    DiseaseStatus: "Healthy",
-    DiseaseObserved: data.strDisease || "None",
-    MainIssues: "None",
-    NewProductUpdate: "None",
-    Achievement: data.strAchievement || "",
-    Challenges: data.strChallenges || "",
-    NextWeekPlan: data.strNextPlan || "",
-    IsDeleted: false
-  };
-
-  return await adminAuthRequest("", {
-    prefix: "/farm-visits",
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-
-// ===================== COMPLAINTS =====================
+// ===================== FARMS =====================
 
 export async function getAllComplaints() {
   const endpoints = ["/all", "/list", "/search?q=%25&limit=1000", ""];
@@ -480,12 +395,13 @@ export async function getComplaintRootCauses() {
 
 export async function saveComplaint(data) {
   const payload = {
+    ComplaintID: data.id || `COMP${Date.now()}`, // Restoring ID as it worked for 6767
     ComplaintDate: data.dtReported || new Date().toISOString().split("T")[0],
     DoctorID: Number(data.intEnroll),
     DoctorName: data.strDoctorName || "",
     ZoneName: data.strZoneName || null,
     FarmTypeName: data.strFarmType || null,
-    FarmID: Number(data.FarmID || 0),
+    FarmID: Number(data.FarmID || 0), // Use 0 instead of null as it worked for 6767
     ComplaintSegment: data.strSegment || null,
     ComplaintType: data.strCategory || null,
     Category: data.strCategory || null,
@@ -506,30 +422,33 @@ export async function saveComplaint(data) {
 
   console.log("API: saveComplaint payload:", payload);
 
-  try {
-    // Try base endpoint first (like visits)
-    return await adminAuthRequest("", {
-      prefix: "/complaints",
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    console.warn("API: saveComplaint base failed, trying /create:", e);
-    return await adminAuthRequest("/create", {
-      prefix: "/complaints",
-      method: "POST",
-      body: JSON.stringify({ ...payload, ComplaintID: data.id || `COMP${Date.now()}` }),
-    });
+  const endpoints = ["/create", "", "/add"];
+  let lastError = null;
+
+  for (const ep of endpoints) {
+    try {
+      const res = await adminAuthRequest(ep, {
+        prefix: "/complaints",
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      console.log(`API: saveComplaint success on ${ep || 'base'}`);
+      return res;
+    } catch (e) {
+      console.warn(`API: saveComplaint attempt on ${ep || 'base'} failed:`, e.message);
+      lastError = e;
+    }
   }
+
+  throw lastError || new Error("Failed to register complaint on all known endpoints.");
 }
 
 export async function updateComplaint(id, data) {
   // Map resolution to 'Resolution' (capitalized) and set IsActive to 0 (resolved)
-  // Some APIs use 'Resolution' while others use 'resolve'
   const payload = {
     ...data,
-    Status: "Resolved", // Add explicit status update
-    IsActive: 0,        // Ensure it's numeric 0
+    Status: "Resolved",
+    IsActive: 0,
     Is_Active: 0,
   };
 
@@ -539,85 +458,45 @@ export async function updateComplaint(id, data) {
     delete payload.resolution;
   }
 
-  console.log(`API: updateComplaint starting for ID ${id}...`);
+  // FORCE use of numeric ID if available, otherwise use string ID
+  // Based on logs, intAutoID is what the update endpoint expects
+  const idToUse = !isNaN(id) ? id : String(id).replace(/^\D+/g, '');
 
-  try {
-    // 1. First, fetch ALL complaints to find the record and its correct primary key
-    const all = await getAllComplaints();
-    const found = all.find(c => c.ComplaintID === id || c.id === id || String(c.ComplaintID).includes(String(id).replace(/^\D+/g, '')));
+  console.log(`API: updateComplaint starting for ID ${id} (using ${idToUse})...`);
 
-    if (!found) {
-      console.warn("API: Could not find complaint in the list to identify its primary key.");
-    } else {
-      console.log("API: Found complaint record for update:", found);
+  const endpoints = [`/update/${idToUse}`, `/edit/${idToUse}`, `/${idToUse}`, `/update/${id}`, `/${id}`];
 
-      // 2. Try every potential ID field found in the record
-      // The error "Input should be a valid integer" suggests it wants a numeric primary key
-      const keysToTry = [];
-      // Prioritize intAutoID based on user logs
-      const internalIds = [found.intAutoID, found.auto_id, found.id, found.StatusID, found.ComplaintID]
-        .filter(v => v !== undefined && v !== null && !isNaN(v));
-
-      for (const nid of internalIds) {
-        keysToTry.push(`/update/${nid}`);
-        keysToTry.push(`/edit/${nid}`);
-        keysToTry.push(`/${nid}`);
-      }
-
-      console.log("API: Update paths to try based on record:", keysToTry);
-
-      for (const endpoint of keysToTry) {
-        try {
-          // Try both PUT and PATCH as some APIs are picky
-          for (const method of ["PUT", "PATCH"]) {
-            try {
-              const res = await adminAuthRequest(endpoint, {
-                prefix: "/complaints",
-                method,
-                body: JSON.stringify({ ...payload, intAutoID: found.intAutoID, ComplaintID: found.ComplaintID }),
-              });
-              console.log(`API: updateComplaint success using ${method} at ${endpoint}`);
-              return res;
-            } catch (innerErr) {
-              if (method === "PATCH") throw innerErr;
-            }
-          }
-        } catch (e) {
-          console.warn(`API: updateComplaint failed at ${endpoint}:`, e.message);
-        }
-      }
-
-      // 3. Try sending ID in body to a generic update endpoint
+  for (const ep of endpoints) {
+    for (const method of ["PUT", "PATCH"]) {
       try {
-        const res = await adminAuthRequest("/update", {
+        const res = await adminAuthRequest(ep, {
           prefix: "/complaints",
-          method: "POST",
-          body: JSON.stringify({ ...payload, intAutoID: found.intAutoID, ComplaintID: found.ComplaintID }),
-        });
-        console.log("API: updateComplaint success using POST to /update");
-        return res;
-      } catch (e) {}
-    }
-
-    // 4. Last resort fallbacks with the original ID
-    const fallbacks = [`/update/${id}`, `/edit/${id}`, `/${id}`];
-    for (const fb of fallbacks) {
-      try {
-        const res = await adminAuthRequest(fb, {
-          prefix: "/complaints",
-          method: "PUT",
+          method,
           body: JSON.stringify(payload),
         });
-        console.log(`API: updateComplaint success on fallback ${fb}`);
+        console.log(`API: updateComplaint success using ${method} at ${ep}`);
         return res;
-      } catch (err) {}
+      } catch (e) {
+        // Continue to next combination
+      }
     }
-
-    throw new Error(`Server did not recognize complaint ID: ${id}. Verified intAutoID was ${found?.intAutoID}.`);
-  } catch (globalErr) {
-    console.error("API: updateComplaint terminal failure:", globalErr.message);
-    throw globalErr;
   }
+
+  // Deep lookup if all direct attempts failed
+  try {
+    const all = await getAllComplaints();
+    const found = all.find(c => c.ComplaintID === id || c.intAutoID == id || String(c.ComplaintID).includes(String(id).replace(/^\D+/g, '')));
+    if (found && found.intAutoID && found.intAutoID != idToUse) {
+      console.log(`API: updateComplaint retrying with discovered intAutoID: ${found.intAutoID}`);
+      return await adminAuthRequest(`/update/${found.intAutoID}`, {
+        prefix: "/complaints",
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+    }
+  } catch (err) {}
+
+  throw new Error(`Server did not recognize complaint ID: ${id}`);
 }
 
 // ===================== AUTH =====================

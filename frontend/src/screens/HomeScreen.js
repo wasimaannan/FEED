@@ -73,7 +73,7 @@ export default function HomeScreen({ navigation }) {
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const headerY       = useRef(new Animated.Value(-12)).current;
 
-  const [stats, setStats] = useState({ doctors: 0, farms: 0, visits: 0, zones: 0 });
+  const [stats, setStats] = useState({ doctors: 0, farms: 0, zones: 0, activeComplaints: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,25 +84,25 @@ export default function HomeScreen({ navigation }) {
 
     async function loadStats() {
       try {
-        const [docs, farmsList, visitsList] = await Promise.all([
+        const [docs, farmsList, complaintsList] = await Promise.all([
           getAllDoctors(),
           getAllFarms(),
-          getAllVisits()
+          getAllComplaints()
         ]);
-
-        // Calculate active weekly visits
-        const today = new Date();
-        const weekNum = calcWeek(today.toISOString().split("T")[0]);
-        const thisWeekVisits = (visitsList || []).filter(v => calcWeek(v.strDate || v.VisitDate) === weekNum).length;
 
         // Calculate unique covered zones among active doctors
         const uniqueZones = new Set((docs || []).map(d => d.strZone || d.ZoneName).filter(Boolean));
 
+        // Active complaints
+        const open = (complaintsList || []).filter(c =>
+          !(c.IsActive === false || c.IsActive === 0 || c.IsActive === '0' || c.Status === "Resolved" || c.Resolution)
+        ).length;
+
         setStats({
           doctors: (docs || []).length,
           farms: (farmsList || []).length,
-          visits: thisWeekVisits,
-          zones: uniqueZones.size
+          zones: uniqueZones.size,
+          activeComplaints: open
         });
       } catch (e) {
         console.warn("Failed to load home screen analytics:", e);
@@ -148,9 +148,9 @@ export default function HomeScreen({ navigation }) {
             delay={100}
           />
           <StatCard
-            icon={<Ionicons name="clipboard" size={15} color={colors.moduleVisit} />}
-            value={stats.visits}
-            label="Visits This Week"
+            icon={<Ionicons name="flag" size={15} color={colors.moduleVisit} />}
+            value={stats.activeComplaints}
+            label="Open Issues"
             color={colors.moduleVisit}
             delay={150}
           />
@@ -184,12 +184,12 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Farms")}
         />
         <ModuleCard
-          icon={<Ionicons name="clipboard-outline" size={24} color="#fff" />}
-          title="Visit targets"
-          sub="Log weekly visit entries"
+          icon={<Ionicons name="flag-outline" size={24} color="#fff" />}
+          title="Complaints"
+          sub="Register and resolve field issues"
           color={colors.moduleVisit}
           delay={355}
-          onPress={() => navigation.navigate("Visit")}
+          onPress={() => navigation.navigate("Complaints")}
         />
       </View>
     </ScrollView>

@@ -133,13 +133,19 @@ export default function ComplaintScreen() {
       const all = await getAllComplaints();
       console.log("ComplaintScreen: Fetched total", all.length, "complaints");
 
-      // Restore user filtering but with safer checks
+      const isAdmin =
+        String(user?.role || user?.Role || "").toLowerCase().includes('admin') ||
+        user?.isAdmin === true ||
+        user?.enrollId === 306007;
+
+      // Filter based on role: Admin sees all, FieldUser sees only their own
       const userComplaints = all.filter(c => {
+        if (isAdmin) return true;
         const creatorId = String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "");
-        return creatorId === String(user.enrollId) || !user.enrollId;
+        return creatorId === String(user.enrollId);
       });
 
-      console.log(`ComplaintScreen: After filtering for user ${user.enrollId}, kept ${userComplaints.length} of ${all.length}`);
+      console.log(`ComplaintScreen: After filtering for user ${user.enrollId} (isAdmin: ${isAdmin}), kept ${userComplaints.length} of ${all.length}`);
 
       const resolved = userComplaints.filter(c => {
         // Resolved if explicitly false, 0, or '0' OR if status is Resolved OR if there is a Resolution
@@ -230,7 +236,7 @@ export default function ComplaintScreen() {
       return;
     }
     try {
-      // 0 means resolved, reason goes into 'resolve' column (mapped in API)
+      // resID will now be the intAutoID if possible
       await updateComplaint(resID, {
         IsActive: 0,
         resolution: resReason.trim()
@@ -273,7 +279,7 @@ export default function ComplaintScreen() {
                 <>
                   <SectionDivider label={`Pending Resolution`} />
                   {openList.map((c) => (
-                    <View key={c.ComplaintID || c.id || Math.random()} style={cs.complaintCard}>
+                    <View key={c.intAutoID || c.ComplaintID || c.id} style={cs.complaintCard}>
                       <View style={{ flex: 1 }}>
                         <View style={cs.breadcrumbRow}>
                           <Text style={cs.breadcrumb}>{c.FarmTypeName}</Text>
@@ -282,11 +288,11 @@ export default function ComplaintScreen() {
                           <Text style={cs.breadcrumbSep}>›</Text>
                           <Text style={cs.breadcrumb}>{c.ComplaintType}</Text>
                         </View>
-                        <Text style={cs.complaintTitle}>{c.ComplaintName || c.strComplaint || "No Title"}</Text>
+                        <Text style={cs.complaintTitle}>{c.ComplaintName || c.strComplaint || c.Subject || "No Title"}</Text>
                         {c.RootCause ? <Text style={cs.rootCause}>Root cause: {c.RootCause}</Text> : null}
                         <Text style={cs.reportedDate}>Reported {c.ComplaintDate ? c.ComplaintDate.split('T')[0] : (c.dtReported || "N/A")}</Text>
 
-                        {resID === c.ComplaintID && (
+                        {resID === (c.intAutoID || c.ComplaintID) && (
                           <FadeIn style={{ marginTop: 12 }}>
                             <FormField
                               label="Resolution Details"
@@ -304,7 +310,10 @@ export default function ComplaintScreen() {
                         )}
                       </View>
                       {!resID && (
-                        <TouchableOpacity style={cs.resolveBtn} onPress={() => setResID(c.ComplaintID)}>
+                        (String(user?.role || user?.Role || "").toLowerCase().includes('admin') || user?.isAdmin === true || user?.enrollId === 306007) ||
+                        String(c.DoctorID || c.CreatedBy || c.RaisedByUserID || c.intEnroll || c.RaisedBy || "") === String(user?.enrollId)
+                      ) && (
+                        <TouchableOpacity style={cs.resolveBtn} onPress={() => setResID(c.intAutoID || c.ComplaintID)}>
                           <Text style={cs.resolveBtnText}>Resolve</Text>
                         </TouchableOpacity>
                       )}
@@ -387,8 +396,8 @@ export default function ComplaintScreen() {
               {resolvedList.length === 0 ? (
                 <EmptyState icon={<Ionicons name="checkmark-circle-outline" size={32} color={colors.textTer} />} title="No resolved complaints" sub="Completed issues will appear here" />
               ) : (
-                resolvedList.map((c) => (
-                  <View key={c.ComplaintID || c.id || Math.random()} style={[cs.complaintCard, { borderColor: colors.successBorder, borderLeftColor: colors.success }]}>
+                resolvedList.map((c, i) => (
+                  <View key={c.intAutoID || c.ComplaintID || i} style={[cs.complaintCard, { borderColor: colors.successBorder, borderLeftColor: colors.success }]}>
                     <View style={cs.breadcrumbRow}>
                       <Text style={cs.breadcrumb}>{c.FarmTypeName}{c.ComplaintSegment ? ` › ${c.ComplaintSegment}` : ""} › {c.ComplaintType}</Text>
                     </View>
